@@ -2,18 +2,23 @@
 
 ## Install
 
+The package is installed directly from the GitHub repository:
+
 ```bash
-pip install cumulant-residual-cert
+GIT=git+https://github.com/kootru-repo/cumulant-residual-cert.git
+pip install "cumulant_residual_cert@${GIT}"
 ```
 
 With one or more chemistry-stack adapters:
 
 ```bash
-pip install "cumulant-residual-cert[pyscf]"
-pip install "cumulant-residual-cert[openfermion]"
-pip install "cumulant-residual-cert[qiskit-nature]"
-pip install "cumulant-residual-cert[all]"
+pip install "cumulant_residual_cert[pyscf]@${GIT}"
+pip install "cumulant_residual_cert[openfermion]@${GIT}"
+pip install "cumulant_residual_cert[qiskit-nature]@${GIT}"
+pip install "cumulant_residual_cert[all]@${GIT}"
 ```
+
+Pin to a release by appending `@v0.4.0` (or another tag) to the git URL.
 
 ## 30 seconds
 
