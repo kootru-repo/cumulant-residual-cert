@@ -1,0 +1,93 @@
+{
+  "r": 4,
+  "catalog": "chemistry_r4",
+  "universal": 105,
+  "words": [
+    {
+      "name": "n_i n_j n_k",
+      "letters": [
+        "n",
+        "n",
+        "n"
+      ],
+      "charges": [
+        0,
+        0,
+        0
+      ],
+      "B_universal": 105,
+      "B_charge_filtered": 1,
+      "B_block_refined": 1
+    },
+    {
+      "name": "a_dag_i a_j n_k",
+      "letters": [
+        "a_dag",
+        "a",
+        "n"
+      ],
+      "charges": [
+        1,
+        -1,
+        0
+      ],
+      "B_universal": 105,
+      "B_charge_filtered": 1,
+      "B_block_refined": 1
+    },
+    {
+      "name": "a_dag_i a_j n_k n_ell",
+      "letters": [
+        "a_dag",
+        "a",
+        "n",
+        "n"
+      ],
+      "charges": [
+        1,
+        -1,
+        0,
+        0
+      ],
+      "B_universal": 105,
+      "B_charge_filtered": 53,
+      "B_block_refined": 3
+    },
+    {
+      "name": "a_dag_i a_dag_j a_k a_ell",
+      "letters": [
+        "a_dag",
+        "a_dag",
+        "a",
+        "a"
+      ],
+      "charges": [
+        1,
+        1,
+        -1,
+        -1
+      ],
+      "B_universal": 105,
+      "B_charge_filtered": 1,
+      "B_block_refined": 1
+    },
+    {
+      "name": "n_i n_j n_k n_ell",
+      "letters": [
+        "n",
+        "n",
+        "n",
+        "n"
+      ],
+      "charges": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "B_universal": 105,
+      "B_charge_filtered": 105,
+      "B_block_refined": 5
+    }
+  ]
+}

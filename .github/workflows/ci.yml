@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint
+        run: |
+          ruff check src tests
+
+      - name: Type check
+        run: |
+          pyright src
+
+      - name: Test
+        run: |
+          pytest --cov=cumulant_residual_cert --cov-report=term-missing
+
+  golden-sync:
+    name: Golden-sync against audit repo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read pinned audit commit
+        id: audit_pin
+        run: echo "sha=$(cat AUDIT_COMMIT)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout audit repo at pinned SHA
+        uses: actions/checkout@v4
+        with:
+          repository: kootru-repo/charge-filtered-cumulant-residuals
+          path: _audit
+          ref: ${{ steps.audit_pin.outputs.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install -e ".[dev]"
+
+      - name: Run sync test
+        env:
+          AUDIT_REPO_PATH: ${{ github.workspace }}/_audit
+        run: |
+          pytest tests/test_golden_sync.py -v
