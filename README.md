@@ -11,14 +11,21 @@ $U(1)$-invariant states.
 
 ## Install
 
+This package is distributed via this GitHub repository; no PyPI publication is
+required. Install directly from the repo with `pip`:
+
 ```bash
-pip install cumulant-residual-cert
+GIT=git+https://github.com/kootru-repo/cumulant-residual-cert.git
+pip install "cumulant_residual_cert@${GIT}"
 # with chemistry-stack adapters
-pip install "cumulant-residual-cert[pyscf]"           # PySCF adapter
-pip install "cumulant-residual-cert[openfermion]"     # OpenFermion adapter
-pip install "cumulant-residual-cert[qiskit-nature]"   # Qiskit-Nature adapter
-pip install "cumulant-residual-cert[all]"             # all three
+pip install "cumulant_residual_cert[pyscf]@${GIT}"
+pip install "cumulant_residual_cert[openfermion]@${GIT}"
+pip install "cumulant_residual_cert[qiskit-nature]@${GIT}"
+pip install "cumulant_residual_cert[all]@${GIT}"
 ```
+
+Pin to a specific release by appending `@v0.4.0` (or another tag) to the
+git URL.
 
 ## 30-second example
 
