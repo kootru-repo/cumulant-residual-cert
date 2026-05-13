@@ -1,0 +1,48 @@
+site_name: cumulant-residual-cert
+site_description: Deterministic bias certificates for charge-neutral fermionic-word observables on U(1)-invariant states.
+site_url: https://cumulant-residual-cert.readthedocs.io
+repo_url: https://github.com/kootru-repo/cumulant-residual-cert
+repo_name: kootru-repo/cumulant-residual-cert
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+  palette:
+    primary: indigo
+    accent: amber
+
+markdown_extensions:
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_source: false
+            docstring_style: numpy
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Constants table: constants_table.md
+  - JW range caveat: jw_range_caveat.md
+  - API reference: api.md
+  - Reproducibility: reproducibility_link.md

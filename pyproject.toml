@@ -1,0 +1,95 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cumulant-residual-cert"
+version = "0.1.0"
+description = "Deterministic bias certificates for charge-neutral fermionic-word observables on U(1)-invariant states."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Andrew Craton", email = "acraton@kootru.com" },
+]
+keywords = [
+    "quantum chemistry",
+    "fermionic shadows",
+    "cumulant truncation",
+    "bias certificate",
+    "U(1) symmetry",
+    "reduced density matrix",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+pyscf = ["pyscf>=2.4"]
+openfermion = ["openfermion>=1.6"]
+qiskit-nature = ["qiskit-nature>=0.7", "qiskit>=1.0"]
+all = [
+    "pyscf>=2.4",
+    "openfermion>=1.6",
+    "qiskit-nature>=0.7",
+    "qiskit>=1.0",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "pyright>=1.1",
+    "hypothesis>=6.100",
+]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/kootru-repo/cumulant-residual-cert"
+Documentation = "https://cumulant-residual-cert.readthedocs.io"
+Issues = "https://github.com/kootru-repo/cumulant-residual-cert/issues"
+Reproducibility = "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cumulant_residual_cert"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/cumulant_residual_cert",
+    "tests",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.pyright]
+pythonVersion = "3.10"
+include = ["src", "tests"]
+strictListInference = true
+strictDictionaryInference = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
