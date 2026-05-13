@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from cumulant_residual_cert import Catalog, certify
@@ -46,6 +48,24 @@ def test_certify_rejects_negative_delta():
     cat = Catalog.chemistry_r4()
     with pytest.raises(ValueError):
         certify(cat, delta=-0.1)
+
+
+def test_certify_rejects_nan_delta():
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError):
+        certify(cat, delta=float("nan"))
+
+
+def test_certify_rejects_inf_delta():
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError):
+        certify(cat, delta=math.inf)
+
+
+def test_certify_rejects_unknown_level():
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError):
+        certify(cat, delta=0.01, level="not_a_level")  # type: ignore[arg-type]
 
 
 def test_certify_universal_matches_b_r():

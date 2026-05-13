@@ -7,21 +7,22 @@ probability $\\ge 1 - \\alpha$ simultaneously over the catalog.
 
 The implementation Bonferroni-corrects over every Pauli string appearing in
 any subword expansion, then propagates Hoeffding radii through the Mobius
-transform. A full sample-splitting variant is on the v0.3 roadmap; the v0.2
-estimator re-uses the entire shadow record for every Pauli mean, which gives
-a valid union bound and is the right starting point for v0.1.
+transform. A full sample-splitting variant is on the later-release roadmap;
+the current estimator re-uses the entire shadow record for every Pauli mean,
+which gives a valid union bound and is the right starting point for the
+current release.
 
 > **Range note.** Random Pauli shadows incur a $3^{|P|}$ range factor per Pauli
 > $P$, which makes the bound data-hungry for word lengths $r \\ge 3$. For
 > chemistry-relevant problems prefer matchgate / fermionic-Gaussian shadows
-> via the OpenFermion adapter (added in v0.3). The diagnostic itself is
+> via the OpenFermion adapter (planned). The diagnostic itself is
 > measurement-protocol-agnostic; you supply the per-Pauli mean estimates and
 > Hoeffding (or tighter) per-Pauli radii.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import combinations, product
 from math import factorial, log, sqrt
@@ -53,7 +54,7 @@ def _pauli_expand(M: np.ndarray, n: int, tol: float = 1e-12) -> dict[tuple[str, 
     The implementation enumerates all $4^n$ Pauli strings, so it is dense and
     intended only for small validation states (typically $n \\le 8$). For
     chemistry-scale registers, replace this with a matchgate-shadow or
-    fermionic-Gaussian protocol via the OpenFermion adapter (v0.3).
+    fermionic-Gaussian protocol via the OpenFermion adapter (planned).
     """
     if n > 10:
         raise ValueError(
@@ -127,7 +128,7 @@ class UCBResult:
 
 
 def delta_ucb(
-    shadow_samples: Sequence[ShadowShot],
+    shadow_samples: Iterable[ShadowShot],
     catalog: Catalog,
     sites_per_word: Sequence[Sequence[int]],
     *,
@@ -136,11 +137,18 @@ def delta_ucb(
 ) -> UCBResult:
     """Compute a Bonferroni-corrected UCB on the catalog envelope.
 
+    The built-in random-Pauli expansion is dense in $n_{\\mathrm{qubits}}$ and
+    refuses to run beyond $n_{\\mathrm{qubits}} = 10$. For larger registers,
+    bypass this function: supply your own per-Pauli mean estimates and
+    Hoeffding-style radii to the propagation pipeline (matchgate-shadow
+    adapter planned for a later release).
+
     Parameters
     ----------
-    shadow_samples : sequence of ``(basis, outcomes)`` tuples
+    shadow_samples : iterable of ``(basis, outcomes)`` tuples
         Random-Pauli shadow record. ``basis`` is a tuple of ``"X"``/``"Y"``/``"Z"``
         on each of ``n_qubits`` sites; ``outcomes`` is a tuple of $\\pm 1$.
+        A general iterable is accepted; it is materialized once at entry.
     catalog : Catalog
         Charge-neutral fermionic-word catalog.
     sites_per_word : sequence of sequences of int
@@ -149,7 +157,8 @@ def delta_ucb(
         corresponding word.
     n_qubits : int
         Total system size used to draw the shadows. Must be at least
-        ``max(max(sites) for sites in sites_per_word)``.
+        ``max(max(sites) for sites in sites_per_word)``. Capped at 10 due to
+        the dense Pauli expansion.
     confidence : float, default 0.95
         Target confidence level $1 - \\alpha$ of the simultaneous bound.
 
@@ -166,6 +175,9 @@ def delta_ucb(
             f"{len(catalog)} words"
         )
 
+    # Materialize the shadow iterable once; downstream code iterates twice and
+    # also needs len().
+    shadow_samples = tuple(shadow_samples)
     M = len(shadow_samples)
     if M == 0:
         raise ValueError("shadow_samples is empty")

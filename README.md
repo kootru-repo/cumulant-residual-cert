@@ -69,8 +69,8 @@ $1 - \alpha$ simultaneously across all words.
 
 > **Note on shadow type.** The current implementation uses random Pauli shadows
 > with the textbook $3^{|P|}$ Jordan-Wigner range factor. For chemistry-scale
-> $r \ge 3$, a matchgate / fermionic-Gaussian shadow adapter is planned for
-> v0.3; the v0.2 OpenFermion adapter currently ships only operator-conversion
+> $r \ge 3$, a matchgate / fermionic-Gaussian shadow adapter is planned for a
+> later release; the OpenFermion adapter currently ships only operator-conversion
 > utilities. See [docs/jw_range_caveat.md](docs/jw_range_caveat.md) for the
 > details and mitigations.
 
@@ -79,9 +79,11 @@ $1 - \alpha$ simultaneously across all words.
 - Yes: certifies the deterministic bias of an order-$\le 2$ cumulant closure of
   a chemistry-catalog observable, given a (state-dependent) envelope $\Delta$.
 - Yes: provides a one-sided certified upper bound on $\Delta$ from random-Pauli
-  or matchgate shadow data.
+  shadow data (matchgate-shadow support is planned for a later release).
 - No: not a shadow-tomography implementation. Bring your own shadows from
-  OpenFermion, PennyLane, Qiskit, or your own pipeline.
+  OpenFermion, PennyLane, Qiskit, or your own pipeline. The built-in
+  random-Pauli expansion is dense and refuses `n_qubits > 10`; for larger
+  registers, supply per-Pauli estimates directly to the diagnostic.
 - No: not a measurement-advantage tool. Variance and shot count are governed by
   whatever shadow protocol you use; this library is orthogonal to that.
 - No: does not perform error mitigation or improve QPU fidelity.

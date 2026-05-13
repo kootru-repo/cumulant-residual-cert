@@ -54,3 +54,20 @@ def test_letter_charge_table():
     assert LETTER_CHARGE["n"] == 0
     assert LETTER_CHARGE["a"] == -1
     assert LETTER_CHARGE["a_dag"] == +1
+
+
+def test_empty_fermionic_word_rejected():
+    with pytest.raises(ValueError):
+        FermionicWord(letters=())
+
+
+def test_empty_catalog_rejected():
+    with pytest.raises(ValueError):
+        Catalog(words=(), r=4)
+
+
+def test_catalog_rejects_duplicate_word_names():
+    w_a = word("n n n", name="dup")
+    w_b = word("n n n n", name="dup")
+    with pytest.raises(ValueError):
+        Catalog(words=(w_a, w_b), r=4)

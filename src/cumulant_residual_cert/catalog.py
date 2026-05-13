@@ -55,6 +55,8 @@ class FermionicWord:
     name: str = ""
 
     def __post_init__(self) -> None:
+        if not self.letters:
+            raise ValueError("fermionic word must contain at least one letter")
         for L in self.letters:
             _validate_letter(L)
         if not self.name:
@@ -89,6 +91,8 @@ class Catalog:
     def __post_init__(self) -> None:
         if self.r < 3:
             raise ValueError("catalog order r must be >= 3 (residual bound is undefined below)")
+        if not self.words:
+            raise ValueError("catalog must contain at least one word")
         names_seen: set[str] = set()
         for w in self.words:
             if w.length > self.r:

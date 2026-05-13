@@ -50,7 +50,7 @@ Three honest options, in order of cost:
    $\Delta = 0$ on this class, and the
    [PySCF adapter](api.md) returns this exactly for canonical Hartree-Fock.
 
-2. **Direct evaluation** from supplied RDMs. Available in v0.3 via
+2. **Direct evaluation** from supplied RDMs. Available in a later release via
    `cumulant_residual_cert.adapters.pyscf.from_rdms`.
 
 3. **Shadow estimation** via the UCB diagnostic

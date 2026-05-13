@@ -101,3 +101,98 @@ def test_ucb_per_word_breakdown_is_populated():
     for w in cat:
         assert w.name in result.per_word
         assert {"kappa_hat", "radius", "ucb"} <= set(result.per_word[w.name].keys())
+
+
+def _valid_sites():
+    return [(1, 2, 3), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
+
+
+def _valid_shot(n_qubits: int):
+    return (("X",) * n_qubits, (1,) * n_qubits)
+
+
+def test_ucb_rejects_empty_shadow_samples():
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError, match="empty"):
+        delta_ucb(
+            shadow_samples=[],
+            catalog=cat,
+            sites_per_word=_valid_sites(),
+            n_qubits=4,
+        )
+
+
+def test_ucb_rejects_iterable_consumed_after_pass():
+    """An iterable (generator) shadow source must work; len() is materialized internally."""
+    cat = Catalog.chemistry_r4()
+    n = 4
+    rho = _two_particle_basis_state(n)
+    shadows_list = collect_shadows(rho, n=n, M=80, seed=11)
+    shadow_iter = (shot for shot in shadows_list)
+    result = delta_ucb(
+        shadow_samples=shadow_iter,
+        catalog=cat,
+        sites_per_word=_valid_sites(),
+        n_qubits=n,
+    )
+    assert result.delta_ucb > 0
+
+
+def test_ucb_rejects_bad_basis_label():
+    cat = Catalog.chemistry_r4()
+    bad = (("Q", "X", "X", "X"), (1, 1, 1, 1))
+    with pytest.raises(ValueError, match="basis must be X/Y/Z"):
+        delta_ucb(
+            shadow_samples=[bad],
+            catalog=cat,
+            sites_per_word=_valid_sites(),
+            n_qubits=4,
+        )
+
+
+def test_ucb_rejects_outcomes_outside_pm1():
+    cat = Catalog.chemistry_r4()
+    bad = (("X", "X", "X", "X"), (1, 0, 1, 1))
+    with pytest.raises(ValueError, match=r"outcomes must be in \{-1, \+1\}"):
+        delta_ucb(
+            shadow_samples=[bad],
+            catalog=cat,
+            sites_per_word=_valid_sites(),
+            n_qubits=4,
+        )
+
+
+def test_ucb_rejects_duplicate_site_indices_in_word():
+    cat = Catalog.chemistry_r4()
+    bad_sites = [(1, 1, 2), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
+    with pytest.raises(ValueError, match="duplicate site"):
+        delta_ucb(
+            shadow_samples=[_valid_shot(4)],
+            catalog=cat,
+            sites_per_word=bad_sites,
+            n_qubits=4,
+        )
+
+
+def test_ucb_rejects_site_out_of_range():
+    cat = Catalog.chemistry_r4()
+    bad_sites = [(1, 2, 99), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
+    with pytest.raises(ValueError, match="outside 1"):
+        delta_ucb(
+            shadow_samples=[_valid_shot(4)],
+            catalog=cat,
+            sites_per_word=bad_sites,
+            n_qubits=4,
+        )
+
+
+def test_ucb_dense_path_rejects_n_qubits_above_10():
+    cat = Catalog.chemistry_r4()
+    n = 11
+    with pytest.raises(ValueError, match=r"refusing to enumerate"):
+        delta_ucb(
+            shadow_samples=[_valid_shot(n)],
+            catalog=cat,
+            sites_per_word=_valid_sites(),
+            n_qubits=n,
+        )
