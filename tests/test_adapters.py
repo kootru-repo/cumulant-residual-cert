@@ -75,6 +75,78 @@ def test_pyscf_unconverged_meanfield_raises():
         from_mean_field(_Stub(), cat, user_asserts_bernoulli_class=True)
 
 
+def test_pyscf_from_rdms_bernoulli_class_yields_zero_delta():
+    """A Slater determinant's RDMs feed straight through from_rdms() to Delta = 0."""
+    pytest.importorskip("pyscf", reason="PySCF not installed")
+    import numpy as np
+
+    from cumulant_residual_cert.adapters.pyscf import from_rdms
+    from cumulant_residual_cert._fermion import letter_op
+    from itertools import product as iproduct
+
+    n = 4
+
+    def slater(occ):
+        bits = [1 if (i + 1) in occ else 0 for i in range(n)]
+        idx = 0
+        for b in bits:
+            idx = (idx << 1) | b
+        psi = np.zeros(2 ** n, dtype=complex)
+        psi[idx] = 1.0
+        return np.outer(psi, psi.conj())
+
+    def build_rdm(rho, k):
+        shape = (n,) * (2 * k)
+        rdm = np.zeros(shape, dtype=complex)
+        for indices in iproduct(range(n), repeat=2 * k):
+            p = indices[:k]
+            q = indices[k:]
+            op = letter_op("I", 1, n)
+            for s0 in p:
+                op = op @ letter_op("a_dag", s0 + 1, n)
+            for s0 in reversed(q):
+                op = op @ letter_op("a", s0 + 1, n)
+            rdm[indices] = np.trace(rho @ op)
+        return rdm
+
+    rho = slater(occ=(1, 2))
+    cat = Catalog.chemistry_r4()
+    sites_per_word = [
+        (1, 2, 3),
+        (1, 2, 3),
+        (1, 2, 3, 4),
+        (1, 2, 3, 4),
+        (1, 2, 3, 4),
+    ]
+    est = from_rdms(
+        rdm1=build_rdm(rho, 1),
+        rdm2=build_rdm(rho, 2),
+        rdm3=build_rdm(rho, 3),
+        rdm4=build_rdm(rho, 4),
+        catalog=cat,
+        sites_per_word=sites_per_word,
+    )
+    assert est.framework == "pyscf"
+    assert est.delta_is_exact is True
+    assert est.delta == pytest.approx(0.0, abs=1e-10)
+    assert all(bar == pytest.approx(0.0, abs=1e-10) for bar in est.bound.bounds.values())
+
+
+def test_pyscf_from_rdms_validates_site_count():
+    pytest.importorskip("pyscf", reason="PySCF not installed")
+    import numpy as np
+
+    from cumulant_residual_cert.adapters.pyscf import from_rdms
+
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError, match="sites_per_word has"):
+        from_rdms(
+            rdm1=np.zeros((2, 2)),
+            catalog=cat,
+            sites_per_word=[(1, 2, 3)],  # only one entry; catalog has 5 words
+        )
+
+
 # ---------------- OpenFermion ---------------------------------------------
 
 

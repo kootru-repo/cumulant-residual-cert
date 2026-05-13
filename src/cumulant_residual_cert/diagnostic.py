@@ -102,6 +102,46 @@ def _hoeffding_radius(weight: int, M: int, alpha_per: float) -> float:
     return (3 ** weight) * sqrt(2 * log(2 / alpha_per) / M)
 
 
+def _partition_radius_contribution(
+    block_hat_mu_mag: Sequence[float],
+    block_rads: Sequence[float],
+    operator_norm_bound: float = 1.0,
+) -> float:
+    """Telescoping radius bound on $|\\prod_B \\hat\\mu_B - \\prod_B \\mu_B|$.
+
+    Each factor satisfies $|\\mu_B| \\le \\min(\\mathrm{op\\_norm\\_bound},
+    |\\hat\\mu_B| + \\mathrm{rad}_B)$ simultaneously (the first by the
+    operator-norm bound on normal-ordered letter products of catalog
+    operators; the second by Hoeffding, w.h.p. across the catalog under the
+    Bonferroni correction). The tightest valid upper bound takes the min of
+    the two and sums the telescoping single-factor errors:
+
+    $$
+    \\sum_j \\mathrm{rad}_j \\cdot \\prod_{j' \\ne j} \\min(c, |\\hat\\mu_{j'}|
+    + \\mathrm{rad}_{j'}).
+    $$
+
+    Splitting this out as a helper makes the tightening directly regression-testable.
+    """
+    n = len(block_hat_mu_mag)
+    if len(block_rads) != n:
+        raise ValueError("block_hat_mu_mag and block_rads must have equal length")
+    if n == 0:
+        return 0.0
+    factor_upper = [
+        min(operator_norm_bound, block_hat_mu_mag[i] + block_rads[i]) for i in range(n)
+    ]
+    total = 0.0
+    for j in range(n):
+        others = 1.0
+        for jj in range(n):
+            if jj == j:
+                continue
+            others *= factor_upper[jj]
+        total += block_rads[j] * others
+    return total
+
+
 @dataclass(frozen=True)
 class UCBResult:
     """Result of a UCB diagnostic call.
@@ -269,18 +309,15 @@ def delta_ucb(
             k = len(pi)
             hat_kappa += (-1) ** (k - 1) * factorial(k - 1) * prod
 
+        # Telescoping product-error bound; see _partition_radius_contribution
+        # for the math and the operator-norm-vs-Hoeffding combination.
         rad_kappa: float = 0.0
         for pi in partitions:
             k = len(pi)
-            block_rads = [rad_mu[tuple(sorted(C))] for C in pi]
-            block_contribution = 0.0
-            for j, _ in enumerate(pi):
-                others_prod = 1.0
-                for jj in range(len(pi)):
-                    if jj == j:
-                        continue
-                    others_prod *= max(1.0, 1.0 + block_rads[jj])
-                block_contribution += block_rads[j] * others_prod
+            block_keys = [tuple(sorted(C)) for C in pi]
+            block_hat = [abs(hat_mu[key]) for key in block_keys]
+            block_rads = [rad_mu[key] for key in block_keys]
+            block_contribution = _partition_radius_contribution(block_hat, block_rads)
             rad_kappa += factorial(k - 1) * block_contribution
 
         ucb_w = abs(hat_kappa) + rad_kappa
@@ -297,6 +334,126 @@ def delta_ucb(
         confidence=confidence,
         n_paulis=T,
         per_word=per_word,
+    )
+
+
+@dataclass(frozen=True)
+class UCBSplitResult:
+    """Result of a sample-split UCB diagnostic call.
+
+    Attributes
+    ----------
+    ucb : UCBResult
+        Bound computed on the diagnostic half $\\mathcal S^{(1)}$.
+    diagnostic_indices : tuple[int, ...]
+        Indices in the original ``shadow_samples`` that were routed into the
+        diagnostic half.
+    holdout_indices : tuple[int, ...]
+        Indices in the original ``shadow_samples`` that were reserved as the
+        independent holdout half $\\mathcal S^{(2)}$. Caller may use them for
+        downstream estimation, calibration, or empirical-Bernstein variance
+        bounds; the diagnostic certificate is independent of them.
+    n_diagnostic : int
+    n_holdout : int
+    """
+
+    ucb: "UCBResult"
+    diagnostic_indices: tuple[int, ...]
+    holdout_indices: tuple[int, ...]
+    n_diagnostic: int
+    n_holdout: int
+
+
+def delta_ucb_split(
+    shadow_samples: Iterable[ShadowShot],
+    catalog: Catalog,
+    sites_per_word: Sequence[Sequence[int]],
+    *,
+    n_qubits: int,
+    confidence: float = 0.95,
+    fraction_diagnostic: float = 0.5,
+    seed: int | None = None,
+) -> UCBSplitResult:
+    """Sample-split UCB diagnostic.
+
+    Splits ``shadow_samples`` into two disjoint halves with a public seed:
+
+    - $\\mathcal S^{(1)}$, the **diagnostic half**, drives the UCB computation
+      via :func:`delta_ucb`.
+    - $\\mathcal S^{(2)}$, the **holdout half**, is returned untouched as
+      ``holdout_indices`` so the caller can use it for downstream estimation
+      or calibration. The certificate is then independent of any subsequent
+      accept/reject or prediction step that uses $\\mathcal S^{(2)}$.
+
+    Parameters
+    ----------
+    shadow_samples : iterable of ``(basis, outcomes)`` tuples
+        Random-Pauli shadow record. Materialized once.
+    catalog : Catalog
+    sites_per_word : sequence of sequences of int
+    n_qubits : int
+    confidence : float, default 0.95
+    fraction_diagnostic : float, default 0.5
+        Fraction of shots routed to the diagnostic half; the rest is the
+        holdout. Must be in $(0, 1)$.
+    seed : int, optional
+        Public seed for the split. When ``None``, an even/odd split by index
+        is used so the split is reproducible without an RNG.
+
+    Returns
+    -------
+    UCBSplitResult
+        Structured result; see attributes.
+    """
+    if not 0 < fraction_diagnostic < 1:
+        raise ValueError(
+            f"fraction_diagnostic must be in (0, 1); got {fraction_diagnostic!r}"
+        )
+    shots = list(shadow_samples)
+    M = len(shots)
+    if M < 2:
+        raise ValueError(
+            f"sample-split needs at least 2 shadow shots; got {M}"
+        )
+
+    if seed is None:
+        # Deterministic even/odd split. With fraction_diagnostic = 0.5 this
+        # gives an exact 50/50 split (M even) or 50/50 +/-1 (M odd).
+        n_diag = int(round(fraction_diagnostic * M))
+        diag_indices = tuple(range(0, M, 2))[:n_diag] if fraction_diagnostic == 0.5 else tuple(range(n_diag))
+        if fraction_diagnostic == 0.5:
+            # use full even/odd partitioning
+            diag_indices = tuple(i for i in range(M) if i % 2 == 0)
+            hold_indices = tuple(i for i in range(M) if i % 2 == 1)
+        else:
+            diag_indices = tuple(range(n_diag))
+            hold_indices = tuple(range(n_diag, M))
+    else:
+        rng = np.random.default_rng(seed)
+        order = rng.permutation(M)
+        n_diag = int(round(fraction_diagnostic * M))
+        if n_diag == 0 or n_diag == M:
+            raise ValueError(
+                "fraction_diagnostic produces an empty half; pick a fraction "
+                "that leaves at least 1 shot on each side"
+            )
+        diag_indices = tuple(int(i) for i in order[:n_diag])
+        hold_indices = tuple(int(i) for i in order[n_diag:])
+
+    diag = [shots[i] for i in diag_indices]
+    ucb = delta_ucb(
+        shadow_samples=diag,
+        catalog=catalog,
+        sites_per_word=sites_per_word,
+        n_qubits=n_qubits,
+        confidence=confidence,
+    )
+    return UCBSplitResult(
+        ucb=ucb,
+        diagnostic_indices=diag_indices,
+        holdout_indices=hold_indices,
+        n_diagnostic=len(diag_indices),
+        n_holdout=len(hold_indices),
     )
 
 
