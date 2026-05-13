@@ -6,6 +6,34 @@ All notable changes to this project will be documented here. Format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-13
+
+### Added
+- `pyscf.from_rdms`: spin-orbital-RDM-driven evaluator of catalog-word
+  connected cumulants via the Mobius formula and an in-house fermionic
+  normal-ordering routine. Unlocks post-Hartree-Fock states (CISD, CASCI,
+  FCI) for which `from_mean_field` cannot give a non-trivial bound. The
+  RDM convention is documented inline.
+- `delta_ucb_split` and `UCBSplitResult`: sample-split UCB diagnostic. The
+  shadow record is split 50/50 (or by a caller-chosen fraction) into a
+  diagnostic half driving the UCB and a holdout half returned for
+  downstream calibration or empirical-Bernstein variance bounds.
+- `notebooks/04_real_shadow_data.ipynb`: pluggable shadow-data landing
+  pad with a simulator branch (runs out of the box) and stubs for
+  IBM Quantum Runtime, Rigetti Forest, IonQ, and IQM Resonance.
+- Private `_normal_order` and `_rdm_eval` modules with unit tests
+  covering letter expansion, anti-commutation, sign-sorted normal-ordered
+  forms, identity / Slater / random-product / correlated-state RDM cases.
+
+### Changed
+- `delta_ucb` radius propagation now uses
+  `min(1, |hat_mu| + rad)` per block factor instead of `1 + rad`.
+  Strictly tighter when empirical means are small while remaining a valid
+  upper bound (operator-norm + Hoeffding). Extracted into
+  `_partition_radius_contribution` for direct regression testing.
+- `delta_ucb` accepts any `Iterable` for `shadow_samples`; the input is
+  materialised once at function entry so generators work.
+
 ## [0.2.0] - 2026-05-13
 
 Initial publicly-shipped release. Combines the originally-planned 0.1.0 core

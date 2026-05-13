@@ -138,50 +138,98 @@ def from_mean_field(
 
 def from_rdms(
     rdm1: "np.ndarray",
-    rdm2: "np.ndarray",
     catalog: Catalog,
     *,
+    sites_per_word: "Any",
     level: Level = "block_refined",
+    rdm2: "np.ndarray | None" = None,
     rdm3: "np.ndarray | None" = None,
     rdm4: "np.ndarray | None" = None,
 ) -> AdapterEstimate:
-    """Certify the truncation bias from supplied RDMs.
+    """Certify the truncation bias from supplied spin-orbital RDMs.
 
-    Computes $\\Delta_{r, U(1)}^{\\mathrm{cat}}(\\rho)$ by evaluating each
-    catalog word's connected cumulant directly from the supplied RDMs.
+    Evaluates the catalog envelope
+
+    .. math::
+        \\Delta_{r, U(1)}^{\\mathrm{cat}}(\\rho)
+        = \\max_{W \\in \\text{catalog}} |\\kappa_W(\\rho)|
+
+    by computing each catalog-word connected cumulant directly from the
+    supplied RDMs. The cumulant uses the Mobius formula
+
+    .. math::
+        \\kappa_W(\\rho)
+        = \\sum_{\\pi \\in \\Pi_m} (-1)^{|\\pi|-1} (|\\pi|-1)!
+        \\prod_{B \\in \\pi} \\mu_B(W; \\rho),
+
+    and each subword moment $\\mu_B$ is obtained by normal-ordering the
+    subword operator (an in-house routine) and looking up the resulting
+    fermionic-RDM element.
 
     .. note::
-        This route is preliminary currently. The full evaluation requires RDMs
-        up to order $r$ to compute the length-$r$ catalog cumulant exactly.
-        For words of length $\\le 2$, ``rdm1`` and ``rdm2`` suffice. For
-        length-3 words, ``rdm3`` is required. For length-4 words, ``rdm4``
-        is required. If a required RDM is missing the adapter raises
-        ``NotImplementedError`` with the catalog-word name; combine the
-        adapter with shadow estimates from
-        :func:`~cumulant_residual_cert.delta_ucb` for those words.
+        PySCF itself is not required to call this function; ``from_rdms``
+        evaluates entirely from supplied tensors. The ``pyscf`` extra is
+        kept consistent so users of the adapter module can also call
+        :func:`from_mean_field` from the same import path.
+
+    **RDM convention.** Each rank-$k$ tensor must follow
+
+    .. math::
+        D^{(k)}[p_1, \\ldots, p_k, q_1, \\ldots, q_k]
+        = \\langle a^\\dagger_{p_1} a^\\dagger_{p_2} \\cdots a^\\dagger_{p_k}
+                  a_{q_k} a_{q_{k-1}} \\cdots a_{q_1} \\rangle.
+
+    Indices are 0-based on the tensor; site indices in ``sites_per_word`` are
+    1-based and refer to spin-orbitals.
 
     Parameters
     ----------
     rdm1 : ndarray of shape (n_orb, n_orb)
-        Spin-summed 1-RDM in the working orbital basis.
-    rdm2 : ndarray of shape (n_orb, n_orb, n_orb, n_orb)
-        Spin-summed 2-RDM in the working orbital basis.
+        Spin-orbital 1-RDM. Required.
     catalog : Catalog
+    sites_per_word : sequence of sequences of int
+        1-based site assignment for each word in ``catalog``, in the same
+        order as ``catalog.words``.
     level : {"universal", "charge_filtered", "block_refined"}
-    rdm3, rdm4 : ndarray, optional
-        Higher-order RDMs required for length-3 and length-4 catalog words.
+    rdm2, rdm3, rdm4 : ndarray, optional
+        Higher-order RDMs of shapes ``(n_orb,) * 4``, ``(n_orb,) * 6``,
+        ``(n_orb,) * 8`` respectively. Each is required when the catalog
+        contains a word of the corresponding length; missing tensors raise
+        ``ValueError`` with the offending word name.
 
     Returns
     -------
     AdapterEstimate
-        With ``delta_is_exact = True`` only if every required RDM is supplied
-        at full precision; otherwise the result is an upper bound (currently
-        raised as ``NotImplementedError`` pending a later release).
+        With ``delta_is_exact = True`` and ``framework = "pyscf"``. The
+        ``delta`` field carries $\\max_W |\\kappa_W|$.
     """
-    _require_pyscf()
-    raise NotImplementedError(
-        "from_rdms() will ship in a later release once the catalog-word "
-        "cumulant evaluator is wired up. In the meantime, use "
-        "from_mean_field() for Bernoulli-class states, or supply Delta "
-        "directly via certify()."
+    from .._rdm_eval import evaluate_word_cumulant
+
+    if len(sites_per_word) != len(catalog):
+        raise ValueError(
+            f"sites_per_word has {len(sites_per_word)} entries but catalog "
+            f"has {len(catalog)} words"
+        )
+
+    cumulants: dict[str, complex] = {}
+    for w, sites in zip(catalog, sites_per_word):
+        sites_t = tuple(int(s) for s in sites)
+        cumulants[w.name] = evaluate_word_cumulant(
+            w, sites_t, rdm1, rdm2, rdm3, rdm4,
+        )
+
+    delta = float(max(abs(k) for k in cumulants.values()))
+    notes = (
+        "Cumulants evaluated from supplied spin-orbital RDMs via in-house "
+        "normal-ordering + Mobius formula.",
+        f"Catalog: {catalog.name!r}, {len(catalog)} words.",
+        f"Max per-word |kappa| over catalog: {delta:.6g}.",
+    )
+    return package_estimate(
+        catalog,
+        delta=delta,
+        delta_is_exact=True,
+        framework="pyscf",
+        level=level,
+        notes=notes,
     )

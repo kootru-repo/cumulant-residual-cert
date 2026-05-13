@@ -196,3 +196,131 @@ def test_ucb_dense_path_rejects_n_qubits_above_10():
             sites_per_word=_valid_sites(),
             n_qubits=n,
         )
+
+
+# ----- radius-propagation tightening regression -----
+
+
+def test_partition_radius_contribution_matches_handworked_two_block():
+    """Hand-worked two-block case: rad_1 = rad_2 = 0.05, hat_mu_1 = hat_mu_2 = 0.1."""
+    from cumulant_residual_cert.diagnostic import _partition_radius_contribution
+
+    contribution = _partition_radius_contribution(
+        block_hat_mu_mag=[0.1, 0.1], block_rads=[0.05, 0.05]
+    )
+    # factor_upper = min(1, 0.1+0.05) = 0.15 each.
+    # total = 0.05 * 0.15 + 0.05 * 0.15 = 0.015.
+    assert contribution == pytest.approx(0.015)
+
+
+def test_partition_radius_contribution_caps_at_operator_norm():
+    """When |hat_mu| + rad would exceed 1, the cap kicks in at the operator norm."""
+    from cumulant_residual_cert.diagnostic import _partition_radius_contribution
+
+    contribution = _partition_radius_contribution(
+        block_hat_mu_mag=[0.9, 0.9], block_rads=[0.5, 0.5]
+    )
+    # factor_upper = min(1, 1.4) = 1.0 each.
+    # total = 0.5 * 1.0 + 0.5 * 1.0 = 1.0.
+    assert contribution == pytest.approx(1.0)
+
+
+def test_partition_radius_contribution_strictly_tighter_than_one_plus_rad():
+    """Compare against the legacy max(1, 1 + rad) form on a small-mean case."""
+    from cumulant_residual_cert.diagnostic import _partition_radius_contribution
+
+    block_hat = [0.1, 0.1, 0.1]
+    block_rads = [0.05, 0.05, 0.05]
+    tight = _partition_radius_contribution(block_hat, block_rads)
+    # Legacy: factor = 1 + rad = 1.05 each.
+    # total = sum_j rad_j * prod_{jj != j} 1.05 = 3 * 0.05 * 1.05**2 = 0.165375.
+    legacy = 3 * 0.05 * 1.05 * 1.05
+    assert tight < legacy
+    # Tight: factor = min(1, 0.15) = 0.15 each.
+    # total = 3 * 0.05 * 0.15 * 0.15 = 0.003375.
+    assert tight == pytest.approx(3 * 0.05 * 0.15 * 0.15)
+    assert tight < 0.05 * legacy  # at least 20x tighter on this case
+
+
+def test_partition_radius_contribution_zero_for_no_blocks():
+    from cumulant_residual_cert.diagnostic import _partition_radius_contribution
+
+    assert _partition_radius_contribution([], []) == 0.0
+
+
+def test_partition_radius_contribution_validates_lengths():
+    from cumulant_residual_cert.diagnostic import _partition_radius_contribution
+
+    with pytest.raises(ValueError, match="equal length"):
+        _partition_radius_contribution([0.1, 0.2], [0.05])
+
+
+# ----- delta_ucb_split -----
+
+
+def test_split_50_50_returns_disjoint_halves():
+    from cumulant_residual_cert import delta_ucb_split
+
+    n = 4
+    rho = _two_particle_basis_state(n)
+    cat = Catalog.chemistry_r4()
+    shadows = collect_shadows(rho, n=n, M=200, seed=13)
+    result = delta_ucb_split(
+        shadow_samples=shadows,
+        catalog=cat,
+        sites_per_word=_valid_sites(),
+        n_qubits=n,
+        confidence=0.95,
+    )
+    assert result.n_diagnostic + result.n_holdout == len(shadows)
+    diag = set(result.diagnostic_indices)
+    hold = set(result.holdout_indices)
+    assert diag.isdisjoint(hold)
+    assert diag | hold == set(range(len(shadows)))
+    assert result.ucb.delta_ucb > 0
+
+
+def test_split_custom_fraction_and_seed():
+    from cumulant_residual_cert import delta_ucb_split
+
+    n = 4
+    rho = _two_particle_basis_state(n)
+    cat = Catalog.chemistry_r4()
+    shadows = collect_shadows(rho, n=n, M=100, seed=21)
+    result = delta_ucb_split(
+        shadow_samples=shadows,
+        catalog=cat,
+        sites_per_word=_valid_sites(),
+        n_qubits=n,
+        fraction_diagnostic=0.7,
+        seed=42,
+    )
+    assert result.n_diagnostic == 70
+    assert result.n_holdout == 30
+
+
+def test_split_rejects_invalid_fraction():
+    from cumulant_residual_cert import delta_ucb_split
+
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError, match=r"fraction_diagnostic must be in"):
+        delta_ucb_split(
+            shadow_samples=[_valid_shot(4), _valid_shot(4)],
+            catalog=cat,
+            sites_per_word=_valid_sites(),
+            n_qubits=4,
+            fraction_diagnostic=0.0,
+        )
+
+
+def test_split_rejects_too_few_shots():
+    from cumulant_residual_cert import delta_ucb_split
+
+    cat = Catalog.chemistry_r4()
+    with pytest.raises(ValueError, match=r"at least 2"):
+        delta_ucb_split(
+            shadow_samples=[_valid_shot(4)],
+            catalog=cat,
+            sites_per_word=_valid_sites(),
+            n_qubits=4,
+        )
