@@ -116,26 +116,68 @@ def catalog_to_fermion_operators(
 
 
 def delta_ucb_from_matchgate_shadows(
-    shadows: Any,
+    majorana_moments: "dict[tuple[int, ...], tuple[complex, float]]",
     catalog: Catalog,
     sites_per_word: Sequence[Sequence[int]],
     *,
-    n_qubits: int,
     confidence: float = 0.95,
+    n_protocol_terms: int,
+    require_all_terms: bool = False,
 ) -> Any:
-    """Run the UCB diagnostic on matchgate / fermionic-Gaussian shadow data.
+    """UCB diagnostic on matchgate / fermionic-Gaussian shadow output.
 
-    .. note::
-        This wrapper will ship in a later release once the matchgate-shadow
-        estimator wiring from OpenFermion is firmed up. The mathematical
-        pipeline is the same as :func:`~cumulant_residual_cert.delta_ucb` but
-        each per-Pauli range factor is replaced by the matchgate range,
-        removing the $3^{|P|}$ penalty.
+    Thin wrapper that routes user-supplied per-Majorana-product
+    ``(mean, radius)`` estimates through
+    :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`.
+    Matchgate-shadow protocols (e.g.
+    :doi:`Wan-Hadfield-Cleve-Babbush 2022 <10.1103/PRXQuantum.4.030337>`,
+    :doi:`Zhao-Rubin-Miyake-Babbush 2021 <10.1103/PhysRevLett.127.110504>`)
+    produce a single-shot estimator
+    $\\hat{\\langle \\gamma_S \\rangle}_t$ for every degree-$|S|$ Majorana
+    product, with a range factor that scales polynomially in the qubit
+    count instead of the random-Pauli $3^{|P|}$ Jordan-Wigner penalty.
+
+    Caller responsibility: take the matchgate-shadow record, compute the
+    empirical mean and Hoeffding-style radius for every Majorana product
+    that appears in the catalog's letter-to-Majorana decomposition, and
+    pass them in via ``majorana_moments``. The Bonferroni correction on
+    the radii is also the caller's responsibility.
+
+    A built-in snapshot estimator (with the Pfaffian + matchgate-orthogonal
+    matrix algebra) is planned for a future release; until then, this
+    wrapper exists to make the moment-to-UCB pipeline immediately usable
+    by anyone who already has matchgate-shadow output.
+
+    Parameters
+    ----------
+    majorana_moments : dict[tuple[int, ...], (complex, float)]
+        See :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`
+        for the convention.
+    catalog : Catalog
+    sites_per_word : sequence of sequences of int
+    confidence : float, default 0.95
+    n_protocol_terms : int
+        Number of distinct Majorana products in the Bonferroni union.
+    require_all_terms : bool, default False
+        If True, raise on any missing Majorana product entry that appears
+        in a catalog subword decomposition. If False, missing entries are
+        treated as $(0, 0)$; this is exact for odd-degree products on
+        $U(1)$-invariant states but unsafe for missing even-degree entries.
+
+    Returns
+    -------
+    UCBResult
     """
-    _require_openfermion()
-    raise NotImplementedError(
-        "delta_ucb_from_matchgate_shadows() will ship in a later release. In "
-        "the meantime, use cumulant_residual_cert.delta_ucb() with random-Pauli "
-        "shadows, or compute Delta from a closed-form expression and call "
-        "certify() directly."
+    # No actual OpenFermion call is made here yet; the wrapper is pure
+    # routing. The optional-dependency import is kept lazy so docs builds
+    # work without OpenFermion installed.
+    from ..diagnostic import delta_ucb_from_majorana_moments
+
+    return delta_ucb_from_majorana_moments(
+        majorana_moments=majorana_moments,
+        catalog=catalog,
+        sites_per_word=sites_per_word,
+        confidence=confidence,
+        n_protocol_terms=n_protocol_terms,
+        require_all_terms=require_all_terms,
     )

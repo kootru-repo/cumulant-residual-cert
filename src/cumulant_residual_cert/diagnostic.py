@@ -167,6 +167,134 @@ class UCBResult:
     per_word: dict[str, dict[str, float]]
 
 
+def _ucb_from_subword_moments(
+    per_subword: "dict[str, dict[tuple[int, ...], tuple[complex, float]]]",
+    catalog: Catalog,
+    confidence: float,
+    n_protocol_terms: int,
+) -> UCBResult:
+    """Protocol-agnostic UCB pipeline.
+
+    Given per-subword empirical moment and Hoeffding-style radius for every
+    catalog word, compute the per-word connected cumulant via the Mobius
+    formula and propagate the radius through a telescoping product bound.
+    The Bonferroni union is assumed to have already been applied to the
+    radii (so they hold simultaneously with probability $\\ge 1 - \\alpha$).
+    """
+    per_word: dict[str, dict[str, float]] = {}
+    ucb_values: list[float] = []
+
+    for w in catalog:
+        m = w.length
+        subword_data = per_subword[w.name]
+        partitions = list(set_partitions(list(range(1, m + 1))))
+
+        hat_kappa: complex = 0.0
+        for pi in partitions:
+            prod: complex = 1.0
+            for C in pi:
+                key = tuple(sorted(C))
+                prod *= subword_data[key][0]
+            k = len(pi)
+            hat_kappa += (-1) ** (k - 1) * factorial(k - 1) * prod
+
+        # Telescoping product-error bound; see _partition_radius_contribution.
+        rad_kappa: float = 0.0
+        for pi in partitions:
+            k = len(pi)
+            block_keys = [tuple(sorted(C)) for C in pi]
+            block_hat = [abs(subword_data[key][0]) for key in block_keys]
+            block_rads = [subword_data[key][1] for key in block_keys]
+            block_contribution = _partition_radius_contribution(block_hat, block_rads)
+            rad_kappa += factorial(k - 1) * block_contribution
+
+        ucb_w = abs(hat_kappa) + rad_kappa
+        ucb_values.append(ucb_w)
+        per_word[w.name] = {
+            "kappa_hat": float(abs(hat_kappa)),
+            "radius": float(rad_kappa),
+            "ucb": float(ucb_w),
+        }
+
+    delta_bar = max(ucb_values) if ucb_values else 0.0
+    return UCBResult(
+        delta_ucb=float(delta_bar),
+        confidence=confidence,
+        n_paulis=n_protocol_terms,
+        per_word=per_word,
+    )
+
+
+def delta_ucb_from_subword_moments(
+    per_subword: "dict[str, dict[tuple[int, ...], tuple[complex, float]]]",
+    catalog: Catalog,
+    *,
+    confidence: float = 0.95,
+    n_protocol_terms: int,
+) -> UCBResult:
+    """Protocol-agnostic UCB on the catalog envelope from per-subword moments.
+
+    Use this when you have already estimated empirical moments and radii for
+    every subword of every catalog word from some measurement protocol of
+    your choice (random-Pauli shadows, matchgate / fermionic-Gaussian
+    shadows, optimized derandomized shadows, Pauli grouping, direct RDM
+    measurement, simulation, etc.). The library handles the Mobius assembly
+    and product-error propagation; the protocol-specific snapshot
+    estimation is your responsibility.
+
+    Parameters
+    ----------
+    per_subword : dict[str, dict[tuple[int, ...], (complex, float)]]
+        Outer key is the catalog word's name. Inner key is the block index
+        tuple (1-based, sorted ascending). Inner value is
+        ``(empirical_moment, hoeffding_radius)``. Every non-empty subword of
+        every catalog word must appear. Radii must already incorporate any
+        Bonferroni / union-bound correction so they hold simultaneously at
+        the stated confidence.
+    catalog : Catalog
+    confidence : float, default 0.95
+    n_protocol_terms : int
+        Number of distinct protocol primitives (Pauli strings, Majorana
+        products, etc.) that entered the Bonferroni union. Reported on the
+        result as ``n_paulis`` for backward compatibility; the field is
+        protocol-agnostic.
+
+    Returns
+    -------
+    UCBResult
+    """
+    if not 0 < confidence < 1:
+        raise ValueError(f"confidence must be in (0, 1); got {confidence!r}")
+    if n_protocol_terms < 0:
+        raise ValueError(f"n_protocol_terms must be >= 0; got {n_protocol_terms!r}")
+
+    # Validate per_subword shape: every word, every non-empty subword.
+    for w in catalog:
+        if w.name not in per_subword:
+            raise ValueError(f"per_subword missing entry for word {w.name!r}")
+        subword_data = per_subword[w.name]
+        m = w.length
+        expected_blocks = {
+            tuple(sorted(B))
+            for k in range(1, m + 1)
+            for B in combinations(range(1, m + 1), k)
+        }
+        missing = expected_blocks - set(subword_data.keys())
+        if missing:
+            raise ValueError(
+                f"per_subword[{w.name!r}] missing entries for blocks: {sorted(missing)}"
+            )
+        for key, (mean_val, rad_val) in subword_data.items():
+            if rad_val < 0:
+                raise ValueError(
+                    f"per_subword[{w.name!r}][{key}]: radius must be >= 0; got {rad_val}"
+                )
+
+    return _ucb_from_subword_moments(
+        per_subword, catalog, confidence, n_protocol_terms,
+    )
+
+
 def delta_ucb(
     shadow_samples: Iterable[ShadowShot],
     catalog: Catalog,
@@ -253,14 +381,10 @@ def delta_ucb(
     alpha = 1 - confidence
 
     # 1. Build subword Pauli expansions for every catalog word.
-    word_sub_paulis: dict[tuple[str, ...], dict[tuple[int, ...], dict]] = {}
+    word_sub_paulis: dict[str, dict[tuple[int, ...], dict]] = {}
     all_paulis: set[tuple[str, ...]] = set()
     for w, sites in zip(catalog, sites_per_word):
         sites_t = tuple(sites)
-        if len(sites_t) != w.length:
-            raise ValueError(
-                f"word {w.name!r} has length {w.length} but {len(sites_t)} sites supplied"
-            )
         m = w.length
         sub_exp: dict[tuple[int, ...], dict] = {}
         for k in range(1, m + 1):
@@ -270,7 +394,7 @@ def delta_ucb(
                 expansion = _pauli_expand(A_B, n_qubits)
                 sub_exp[key] = expansion
                 all_paulis.update(expansion.keys())
-        word_sub_paulis[(w.letters, sites_t)] = sub_exp
+        word_sub_paulis[w.name] = sub_exp
 
     pauli_list = sorted(all_paulis)
     T = len(pauli_list)
@@ -286,54 +410,121 @@ def delta_ucb(
         pauli_means[P] = s / M
         pauli_rads[P] = _hoeffding_radius(_pauli_weight(P), M, alpha_per)
 
-    # 3. Per-word kappa-hat and propagated radius.
-    per_word: dict[str, dict[str, float]] = {}
-    ucb_values: list[float] = []
-    for w, sites in zip(catalog, sites_per_word):
-        sites_t = tuple(sites)
-        m = w.length
-        sub_exp = word_sub_paulis[(w.letters, sites_t)]
-
-        hat_mu: dict[tuple[int, ...], complex] = {}
-        rad_mu: dict[tuple[int, ...], float] = {}
-        for B, expansion in sub_exp.items():
-            hat_mu[B] = sum(c * pauli_means[P] for P, c in expansion.items())
-            rad_mu[B] = sum(abs(c) * pauli_rads[P] for P, c in expansion.items())
-
-        hat_kappa: complex = 0.0
-        partitions = list(set_partitions(list(range(1, m + 1))))
-        for pi in partitions:
-            prod: complex = 1.0
-            for C in pi:
-                prod *= hat_mu[tuple(sorted(C))]
-            k = len(pi)
-            hat_kappa += (-1) ** (k - 1) * factorial(k - 1) * prod
-
-        # Telescoping product-error bound; see _partition_radius_contribution
-        # for the math and the operator-norm-vs-Hoeffding combination.
-        rad_kappa: float = 0.0
-        for pi in partitions:
-            k = len(pi)
-            block_keys = [tuple(sorted(C)) for C in pi]
-            block_hat = [abs(hat_mu[key]) for key in block_keys]
-            block_rads = [rad_mu[key] for key in block_keys]
-            block_contribution = _partition_radius_contribution(block_hat, block_rads)
-            rad_kappa += factorial(k - 1) * block_contribution
-
-        ucb_w = abs(hat_kappa) + rad_kappa
-        ucb_values.append(ucb_w)
-        per_word[w.name] = {
-            "kappa_hat": float(abs(hat_kappa)),
-            "radius": float(rad_kappa),
-            "ucb": float(ucb_w),
+    # 3. Per-subword empirical (mean, radius), built from the Pauli decomposition.
+    per_subword: dict[str, dict[tuple[int, ...], tuple[complex, float]]] = {}
+    for w in catalog:
+        sub_exp = word_sub_paulis[w.name]
+        per_subword[w.name] = {
+            B: (
+                sum(c * pauli_means[P] for P, c in expansion.items()),
+                sum(abs(c) * pauli_rads[P] for P, c in expansion.items()),
+            )
+            for B, expansion in sub_exp.items()
         }
 
-    delta_bar = max(ucb_values) if ucb_values else 0.0
-    return UCBResult(
-        delta_ucb=float(delta_bar),
+    # 4. Delegate the protocol-agnostic Mobius + propagation step.
+    return _ucb_from_subword_moments(
+        per_subword, catalog, confidence, n_protocol_terms=T,
+    )
+
+
+def delta_ucb_from_majorana_moments(
+    majorana_moments: "dict[tuple[int, ...], tuple[complex, float]]",
+    catalog: Catalog,
+    sites_per_word: Sequence[Sequence[int]],
+    *,
+    confidence: float = 0.95,
+    n_protocol_terms: int,
+    require_all_terms: bool = False,
+) -> UCBResult:
+    """UCB pipeline from per-Majorana-product (mean, radius) estimates.
+
+    This is the protocol-agnostic entry point for matchgate /
+    fermionic-Gaussian shadow protocols, classical-shadow variants based on
+    Majorana sampling, or any custom estimator that produces (mean, radius)
+    per Majorana product. The library handles the dictionary-letter to
+    Majorana decomposition, the subword propagation, and the Mobius
+    assembly; the snapshot estimation is up to the caller.
+
+    Parameters
+    ----------
+    majorana_moments : dict[tuple[int, ...], (complex, float)]
+        Keyed by strictly-sorted tuple of distinct Majorana indices
+        $S = (j_1 < j_2 < \\ldots < j_{2k})$. The value is
+        ``(empirical_moment, hoeffding_radius)`` for the Majorana product
+        $\\gamma_S = \\gamma_{j_1} \\gamma_{j_2} \\cdots \\gamma_{j_{2k}}$.
+        Site $p$ (1-based) maps to Majorana indices $(2p-1, 2p)$. The empty
+        tuple ``()`` represents the identity; if absent the mean is taken
+        as $1$ (exact, zero radius). Radii must already incorporate any
+        Bonferroni / union-bound correction.
+    catalog : Catalog
+    sites_per_word : sequence of sequences of int
+        1-based site assignments per catalog word, in catalog order.
+    confidence : float, default 0.95
+    n_protocol_terms : int
+        Number of distinct Majorana products counted in the Bonferroni
+        union. Reported on the result as ``n_paulis``.
+    require_all_terms : bool, default False
+        When False, any Majorana product that appears in a catalog subword
+        decomposition but is missing from ``majorana_moments`` is taken as
+        $(0, 0)$. This is exact for odd-degree Majorana products on
+        $U(1)$-invariant states; missing even-degree entries are
+        silently treated as zero (which under-estimates the radius and may
+        invalidate the bound). When True, every appearing term must be
+        present; missing entries raise ``ValueError``.
+
+    Returns
+    -------
+    UCBResult
+    """
+    from ._majorana import word_majorana_decomposition
+
+    if len(sites_per_word) != len(catalog):
+        raise ValueError(
+            f"sites_per_word has {len(sites_per_word)} entries but catalog has "
+            f"{len(catalog)} words"
+        )
+
+    def _lookup(idx_tuple: tuple[int, ...]) -> tuple[complex, float]:
+        if idx_tuple == ():
+            return majorana_moments.get((), (1.0 + 0j, 0.0))
+        if idx_tuple not in majorana_moments:
+            if require_all_terms:
+                raise ValueError(
+                    f"majorana_moments missing required entry for Majorana indices {idx_tuple}"
+                )
+            return (0.0 + 0j, 0.0)
+        return majorana_moments[idx_tuple]
+
+    per_subword: dict[str, dict[tuple[int, ...], tuple[complex, float]]] = {}
+    for w, sites in zip(catalog, sites_per_word):
+        sites_t = tuple(int(s) for s in sites)
+        if len(sites_t) != w.length:
+            raise ValueError(
+                f"word {w.name!r} has length {w.length} but {len(sites_t)} sites supplied"
+            )
+        sub_data: dict[tuple[int, ...], tuple[complex, float]] = {}
+        m = w.length
+        for k in range(1, m + 1):
+            for B in combinations(range(1, m + 1), k):
+                key = tuple(sorted(B))
+                sub_letters = tuple(w.letters[i - 1] for i in key)
+                sub_sites = tuple(sites_t[i - 1] for i in key)
+                decomp = word_majorana_decomposition(sub_letters, sub_sites)
+                hat_mu: complex = 0.0 + 0j
+                rad_mu: float = 0.0
+                for indices, coeff in decomp.items():
+                    mean_val, rad_val = _lookup(indices)
+                    hat_mu += coeff * mean_val
+                    rad_mu += abs(coeff) * rad_val
+                sub_data[key] = (hat_mu, rad_mu)
+        per_subword[w.name] = sub_data
+
+    return delta_ucb_from_subword_moments(
+        per_subword,
+        catalog,
         confidence=confidence,
-        n_paulis=T,
-        per_word=per_word,
+        n_protocol_terms=n_protocol_terms,
     )
 
 

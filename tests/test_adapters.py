@@ -257,6 +257,47 @@ def test_qiskit_nature_from_problem_requires_bernoulli_assertion():
         from_problem(problem=object(), catalog=cat)
 
 
+def test_openfermion_matchgate_wrapper_routes_through_majorana_pipeline():
+    """The matchgate wrapper now works as a thin router (no longer NotImplementedError)."""
+    pytest.importorskip("openfermion", reason="OpenFermion not installed")
+    from cumulant_residual_cert.adapters.openfermion import delta_ucb_from_matchgate_shadows
+
+    cat = Catalog.chemistry_r4()
+    sites = [(1, 2, 3), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
+    # Empty majorana_moments: every term defaults to (0, 0), giving a zero UCB.
+    result = delta_ucb_from_matchgate_shadows(
+        majorana_moments={},
+        catalog=cat,
+        sites_per_word=sites,
+        confidence=0.95,
+        n_protocol_terms=0,
+    )
+    assert result.delta_ucb == 0.0
+    assert result.confidence == 0.95
+
+
+def test_openfermion_matchgate_wrapper_propagates_nonzero_moments():
+    """A nonzero Majorana moment with finite radius produces a positive UCB."""
+    pytest.importorskip("openfermion", reason="OpenFermion not installed")
+    from cumulant_residual_cert.adapters.openfermion import delta_ucb_from_matchgate_shadows
+
+    cat = Catalog.chemistry_r4()
+    sites = [(1, 2, 3), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
+    # Inject a small radius on the identity Majorana product. n_p
+    # decompositions all contain the identity coefficient 1/2.
+    majorana = {(): (1.0 + 0j, 0.1)}
+    result = delta_ucb_from_matchgate_shadows(
+        majorana_moments=majorana,
+        catalog=cat,
+        sites_per_word=sites,
+        confidence=0.95,
+        n_protocol_terms=1,
+    )
+    # Identity propagated through length-3 and length-4 catalog words yields
+    # a nonzero residual radius.
+    assert result.delta_ucb > 0
+
+
 def test_qiskit_nature_rejects_zero_site_index():
     pytest.importorskip("qiskit_nature", reason="qiskit-nature not installed")
     from cumulant_residual_cert.adapters.qiskit_nature import word_to_fermionic_op

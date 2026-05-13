@@ -6,6 +6,36 @@ All notable changes to this project will be documented here. Format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-13
+
+### Added
+- `delta_ucb_from_subword_moments`: protocol-agnostic public entry point.
+  Accepts pre-computed `(mean, radius)` for every subword of every catalog
+  word and runs the Mobius assembly + product-error propagation. The
+  Bonferroni correction on radii is the caller's responsibility.
+- `delta_ucb_from_majorana_moments`: protocol-agnostic public entry point
+  keyed by Majorana product. Performs the dictionary-letter to Majorana
+  decomposition internally and routes through
+  `delta_ucb_from_subword_moments`. Suitable for matchgate /
+  fermionic-Gaussian shadow protocols that estimate
+  $\\langle \\gamma_S \\rangle$ directly.
+- `cumulant_residual_cert._majorana`: dictionary-letter to canonical
+  Majorana product decomposition, with anti-commutation sign tracking and
+  $\\gamma_a^2 = 1$ pair removal. Cross-checked against the dense
+  fermion-algebra letter operators in `_fermion`.
+- `openfermion.delta_ucb_from_matchgate_shadows` is now a working thin
+  wrapper that routes user-supplied per-Majorana-product `(mean, radius)`
+  estimates through `delta_ucb_from_majorana_moments`. The internal
+  matchgate-shadow snapshot estimator (Pfaffian + orthogonal-matrix
+  algebra) remains deferred to a later release; the wrapper documents
+  the caller-responsibility split and gives a usable end-to-end pipeline
+  for users who already have matchgate-shadow output.
+
+### Changed
+- `delta_ucb` internals refactored to delegate the protocol-agnostic
+  Mobius + propagation step to `_ucb_from_subword_moments`. The public
+  interface is unchanged.
+
 ## [0.3.0] - 2026-05-13
 
 ### Added

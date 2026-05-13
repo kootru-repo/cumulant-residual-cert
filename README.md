@@ -67,12 +67,15 @@ The diagnostic is Bonferroni-corrected over every Pauli string in the catalog's
 subword expansions, so the upper bound holds with probability at least
 $1 - \alpha$ simultaneously across all words.
 
-> **Note on shadow type.** The current implementation uses random Pauli shadows
-> with the textbook $3^{|P|}$ Jordan-Wigner range factor. For chemistry-scale
-> $r \ge 3$, a matchgate / fermionic-Gaussian shadow adapter is planned for a
-> later release; the OpenFermion adapter currently ships only operator-conversion
-> utilities. See [docs/jw_range_caveat.md](docs/jw_range_caveat.md) for the
-> details and mitigations.
+> **Note on shadow type.** `delta_ucb` uses random Pauli shadows with the
+> textbook $3^{|P|}$ Jordan-Wigner range factor. For chemistry-scale
+> $r \ge 3$, supply per-Majorana-product `(mean, radius)` estimates from
+> a matchgate / fermionic-Gaussian shadow protocol of your choice and call
+> [`delta_ucb_from_majorana_moments`](docs/api.md) or the OpenFermion
+> wrapper `adapters.openfermion.delta_ucb_from_matchgate_shadows`. A
+> built-in matchgate-snapshot estimator is planned for a later release.
+> See [docs/jw_range_caveat.md](docs/jw_range_caveat.md) for the details
+> and mitigations.
 
 ## What this does and does not do
 

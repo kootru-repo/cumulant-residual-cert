@@ -13,7 +13,14 @@ from __future__ import annotations
 from . import constants
 from .catalog import Catalog, FermionicWord, word
 from .certify import CertifiedBound, certify
-from .diagnostic import UCBResult, UCBSplitResult, delta_ucb, delta_ucb_split
+from .diagnostic import (
+    UCBResult,
+    UCBSplitResult,
+    delta_ucb,
+    delta_ucb_from_majorana_moments,
+    delta_ucb_from_subword_moments,
+    delta_ucb_split,
+)
 
 __all__ = [
     "Catalog",
@@ -24,8 +31,10 @@ __all__ = [
     "certify",
     "constants",
     "delta_ucb",
+    "delta_ucb_from_majorana_moments",
+    "delta_ucb_from_subword_moments",
     "delta_ucb_split",
     "word",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
