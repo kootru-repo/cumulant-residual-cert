@@ -31,8 +31,16 @@ def test_golden_json_matches_freshly_computed():
 
     assert golden["r"] == table.r
     assert golden["universal"] == table.universal
+    assert golden["catalog"] == cat.name
 
     by_name = {entry["name"]: entry for entry in golden["words"]}
+    # Word set must match exactly (no missing or extra entries).
+    assert set(by_name) == {w.name for w in cat}
+    assert len(golden["words"]) == len(cat)
+    # Ordering must match too, so downstream readers that iterate by index
+    # see the same word at the same position.
+    assert [entry["name"] for entry in golden["words"]] == [w.name for w in cat]
+
     for w in cat:
         entry = by_name[w.name]
         wc = table.per_word[w.name]
@@ -41,6 +49,26 @@ def test_golden_json_matches_freshly_computed():
         assert entry["B_universal"] == wc.universal
         assert entry["B_charge_filtered"] == wc.charge_filtered
         assert entry["B_block_refined"] == wc.block_refined
+
+
+def test_golden_json_universal_is_consistent_across_words():
+    """All per-word B_universal entries equal the top-level universal constant."""
+    golden = constants.load_golden()
+    assert all(entry["B_universal"] == golden["universal"] for entry in golden["words"])
+
+
+def test_golden_json_b_charge_set_is_canonical():
+    """The set of charge-filtered constants on this catalog is {1, 53, 105}."""
+    golden = constants.load_golden()
+    bc = sorted({entry["B_charge_filtered"] for entry in golden["words"]})
+    assert bc == [1, 53, 105]
+
+
+def test_golden_json_bhat_charge_set_is_canonical():
+    """The set of block-refined constants on this catalog is {1, 3, 5}."""
+    golden = constants.load_golden()
+    bh = sorted({entry["B_block_refined"] for entry in golden["words"]})
+    assert bh == [1, 3, 5]
 
 
 def test_audit_repo_cross_check():

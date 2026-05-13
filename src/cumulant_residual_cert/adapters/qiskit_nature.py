@@ -5,7 +5,7 @@ QPE pipeline through `Qiskit-Nature <https://qiskit.org/ecosystem/nature/>`_
 and wants to certify the bias of a cumulant-truncated post-processing step on
 a chemistry-catalog observable.
 
-Two routes are supported in v0.2:
+Two routes are supported currently:
 
 - :func:`from_problem`: take an ``ElectronicStructureProblem`` whose ground
   state is computed via mean-field, returning $\\Delta = 0$ when the state
@@ -22,6 +22,7 @@ Install with::
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 from ..catalog import Catalog, FermionicWord
@@ -29,25 +30,37 @@ from ..constants import Level
 from ._common import AdapterEstimate, package_estimate
 
 if TYPE_CHECKING:
-    pass
+    from qiskit_nature.second_q.operators import FermionicOp
 
-try:
-    from qiskit_nature.second_q.operators import FermionicOp  # noqa: F401
-except ImportError as e:  # pragma: no cover
-    raise ImportError(
-        "qiskit-nature is required for cumulant_residual_cert.adapters.qiskit_nature. "
-        "Install with: pip install 'cumulant-residual-cert[qiskit-nature]'"
-    ) from e
+_QISKIT_NATURE_MISSING_MSG = (
+    "qiskit-nature is required for cumulant_residual_cert.adapters.qiskit_nature. "
+    "Install with: pip install 'cumulant-residual-cert[qiskit-nature]'"
+)
+
+
+def _require_qiskit_nature():
+    """Import and return Qiskit-Nature's ``FermionicOp`` or raise a helpful error.
+
+    Kept lazy so that ``import cumulant_residual_cert.adapters.qiskit_nature``
+    does not fail when only docs are being built or when an introspection tool
+    walks the module without intending to call any of its functions.
+    """
+    try:
+        from qiskit_nature.second_q.operators import FermionicOp as _FermionicOp
+    except ImportError as e:  # pragma: no cover
+        raise ImportError(_QISKIT_NATURE_MISSING_MSG) from e
+    return _FermionicOp
 
 
 def word_to_fermionic_op(
     word: FermionicWord,
-    sites: tuple[int, ...],
+    sites: Sequence[int],
 ) -> "FermionicOp":
     """Convert a :class:`FermionicWord` to a Qiskit-Nature ``FermionicOp``.
 
     Site indices are 1-based on input and converted to 0-based for Qiskit-Nature.
     """
+    FermionicOp = _require_qiskit_nature()
     if len(sites) != word.length:
         raise ValueError(
             f"word {word.name!r} has length {word.length} but {len(sites)} sites given"
@@ -103,7 +116,7 @@ def from_problem(
     catalog : Catalog
     basis : {"canonical"}
         Only ``"canonical"`` is supported; other bases would require RDM
-        evaluation (v0.3).
+        evaluation (planned for a later release).
     level : {"universal", "charge_filtered", "block_refined"}
     user_asserts_bernoulli_class : bool
         Required to be True. Asserts that the prepared state is a canonical-

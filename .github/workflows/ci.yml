@@ -35,11 +35,36 @@ jobs:
 
       - name: Type check
         run: |
-          pyright src
+          pyright src tests
 
       - name: Test
         run: |
           pytest --cov=cumulant_residual_cert --cov-report=term-missing
+
+  adapters-and-docs:
+    name: Adapter extras + docs build (Ubuntu, Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install with all extras and docs
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[all,dev,docs]"
+
+      - name: Run adapter tests
+        run: |
+          pytest tests/test_adapters.py -v
+
+      - name: Build docs
+        run: |
+          mkdocs build --strict
 
   golden-sync:
     name: Golden-sync against audit repo
@@ -49,7 +74,13 @@ jobs:
 
       - name: Read pinned audit commit
         id: audit_pin
-        run: echo "sha=$(cat AUDIT_COMMIT)" >> "$GITHUB_OUTPUT"
+        run: |
+          sha=$(cat AUDIT_COMMIT | tr -d '[:space:]')
+          if ! [[ "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "AUDIT_COMMIT must contain a 40-character lowercase hex SHA; got: $sha" >&2
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Checkout audit repo at pinned SHA
         uses: actions/checkout@v4
@@ -62,6 +93,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Install
         run: |
