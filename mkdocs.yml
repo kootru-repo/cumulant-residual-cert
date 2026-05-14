@@ -1,5 +1,5 @@
 site_name: cumulant-residual-cert
-site_description: Deterministic bias certificates for charge-neutral fermionic-word observables on U(1)-invariant states.
+site_description: Deterministic bias certificates for second-order cumulant truncation on U(1)-invariant fermionic states.
 site_url: https://cumulant-residual-cert.readthedocs.io
 repo_url: https://github.com/kootru-repo/cumulant-residual-cert
 repo_name: kootru-repo/cumulant-residual-cert
