@@ -22,6 +22,8 @@ Click the Colab badge that matches your state of mind. All notebooks run end-to-
 [qs]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb
 [cb-nb]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb
 
+> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals): audit pipeline, formal proofs, mutation harness, adversarial-search harness, and SHA256-pinned data deposit. The present library is the user-facing companion; its constants table is CI-checked against that repo's independent enumeration on every push.
+
 ### What you get from each notebook
 
 - **[`00_tutorial.ipynb`](notebooks/00_tutorial.ipynb)** — the front door. You'll leave knowing the one inequality the whole library is about, which of four paths fits your situation, and what the same physical state's certificate looks like through every path side by side. Closes with the go/no-go decision rule against your tolerance. *For users who don't know which adapter or diagnostic to use yet.*
