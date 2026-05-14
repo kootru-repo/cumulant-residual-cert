@@ -7,9 +7,11 @@ $U(1)$-invariant states.
 > observable, this library produces a rigorous upper bound on the truncation
 > bias, in one function call.
 
+[![Open tutorial in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/00_tutorial.ipynb)
 [![Open quickstart in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb)
 [![Open cookbook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb)
 
+- [`00_tutorial.ipynb`](notebooks/00_tutorial.ipynb): the front door. The inequality + a decision tree mapping your situation to one of four paths + one concrete state walked through all four side by side + the go/no-go rule against your tolerance.
 - [`01_quickstart.ipynb`](notebooks/01_quickstart.ipynb): the theorem in action on a concrete worked example, with expected vs actual numbers at every step.
 - [`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb): nine recipes for applying the certificate to your own state, RDM data, shadow data, custom catalog, or workflow-decision context.
 
