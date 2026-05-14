@@ -47,9 +47,19 @@ def package_estimate(
     framework: str,
     level: Level = "block_refined",
     notes: tuple[str, ...] = (),
+    delta_provenance: str = "user_supplied",
 ) -> AdapterEstimate:
-    """Wrap a delta value into a certified estimate."""
-    bound = certify(catalog, delta=delta, level=level)
+    """Wrap a delta value into a certified estimate.
+
+    ``delta_provenance`` is forwarded to :func:`~..certify.certify` and ends
+    up as a field on the inner :class:`~..certify.CertifiedBound`, so a
+    persisted certificate from an adapter correctly identifies the route
+    that produced the bound (closed-form Bernoulli, from-RDMs, shadow UCB,
+    user assertion).
+    """
+    bound = certify(
+        catalog, delta=delta, level=level, delta_provenance=delta_provenance,
+    )
     return AdapterEstimate(
         delta=delta,
         delta_is_exact=delta_is_exact,

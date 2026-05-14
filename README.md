@@ -98,6 +98,32 @@ $1 - \alpha$ simultaneously across all words.
   whatever shadow protocol you use; this library is orthogonal to that.
 - No: does not perform error mitigation or improve QPU fidelity.
 
+## Persisting a certificate
+
+`certify()` returns a frozen dataclass; there is no `.save()` method by
+design. Standard-library `dataclasses.asdict` plus `json.dump` produces a
+useable scientific artefact:
+
+```python
+import json
+from dataclasses import asdict
+from cumulant_residual_cert import Catalog, certify
+
+cat = Catalog.chemistry_r4()
+result = certify(cat, delta=0.012, delta_provenance="from_rdms")
+with open("my_workflow_certificate.json", "w") as f:
+    json.dump(asdict(result), f, indent=2)
+```
+
+The persisted dict carries the bound values, the integer constants used,
+the catalog name, the library version (auto-populated via
+`importlib.metadata`), and the caller-declared `delta_provenance` label
+(one of `"closed_form_bernoulli"`, `"from_rdms"`, `"ucb_random_pauli"`,
+`"ucb_subword"`, `"ucb_majorana"`, `"ucb_matchgate_shadows"`, or
+`"user_supplied"`; custom labels are also accepted). That is enough for a
+downstream auditor or a journal supplement to identify exactly what
+produced the bound.
+
 ## License
 
 Apache 2.0.

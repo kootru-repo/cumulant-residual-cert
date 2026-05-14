@@ -2,16 +2,56 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, field
+from typing import Literal
 
 from . import constants
 from .catalog import Catalog
 from .constants import Level
 
 
+def _lookup_library_version() -> str:
+    """Best-effort lookup of the installed package version.
+
+    Uses ``importlib.metadata.version`` so the value is correct under
+    standard installs (``pip install ...``) and editable installs
+    (``pip install -e .``). Falls back to ``"unknown"`` if the package
+    is not installed at all (running directly from source without
+    install), which keeps the certificate machinery functional in
+    development.
+    """
+    try:
+        from importlib.metadata import version as _pkg_version
+
+        return _pkg_version("cumulant-residual-cert")
+    except Exception:  # pragma: no cover - defensive
+        return "unknown"
+
+
+# Strings the library uses to label the provenance of the supplied $\Delta$.
+# Add new entries here as new pipelines land; the field itself is
+# free-form ``str`` so callers can also use their own labels when
+# integrating with custom estimators.
+DeltaProvenance = Literal[
+    "user_supplied",
+    "closed_form_bernoulli",
+    "from_rdms",
+    "ucb_random_pauli",
+    "ucb_subword",
+    "ucb_majorana",
+    "ucb_matchgate_shadows",
+]
+
+
 @dataclass(frozen=True)
 class CertifiedBound:
     """Result of a single certification call.
+
+    The dataclass is JSON-serialisable directly via
+    ``json.dumps(dataclasses.asdict(result))``. Persistence is the caller's
+    responsibility; the library's job is to make sure every field needed to
+    re-evaluate the certificate is present and honestly labelled.
 
     Attributes
     ----------
@@ -24,12 +64,29 @@ class CertifiedBound:
         or ``"block_refined"``).
     constants_used : dict[str, int]
         The integer constants applied to each word.
+    library_version : str
+        Version string of the producing ``cumulant-residual-cert`` install,
+        looked up at construction time via ``importlib.metadata``. Useful
+        as part of the persisted certificate so future audits can
+        identify which library version produced the bound.
+    delta_provenance : str
+        How the supplied $\\Delta$ was obtained. Library-known values are
+        listed in :data:`DeltaProvenance`; callers integrating with custom
+        estimators may use their own strings. Default is
+        ``"user_supplied"``, which is the honest label when the user
+        passes a number with no further library help.
+    catalog_name : str
+        The catalog's ``name`` attribute, recorded so the persisted
+        certificate identifies which catalog the constants apply to.
     """
 
     bounds: dict[str, float]
     delta: float
     level: Level
     constants_used: dict[str, int]
+    library_version: str = field(default_factory=_lookup_library_version)
+    delta_provenance: str = "user_supplied"
+    catalog_name: str = ""
 
 
 def certify(
@@ -37,6 +94,7 @@ def certify(
     delta: float,
     *,
     level: Level = "block_refined",
+    delta_provenance: str = "user_supplied",
 ) -> CertifiedBound:
     """Certify the deterministic bias of an order-$\\le 2$ cumulant closure.
 
@@ -60,6 +118,11 @@ def certify(
     level : {"universal", "charge_filtered", "block_refined"}, default "block_refined"
         Which constant family to apply. ``"block_refined"`` is tightest and
         is the recommended default.
+    delta_provenance : str, default ``"user_supplied"``
+        Free-form label describing how ``delta`` was obtained. Recorded on
+        the returned :class:`CertifiedBound` for auditability. Library-
+        recognised values appear in :data:`DeltaProvenance`; callers
+        integrating with custom estimators may pass their own labels.
 
     Returns
     -------
@@ -69,10 +132,8 @@ def certify(
     Raises
     ------
     ValueError
-        If ``delta`` is negative.
+        If ``delta`` is negative or non-finite.
     """
-    import math
-
     if not math.isfinite(delta):
         raise ValueError(f"delta must be a finite real number; got {delta!r}")
     if delta < 0:
@@ -90,4 +151,6 @@ def certify(
         delta=delta,
         level=level,
         constants_used=constants_used,
+        delta_provenance=delta_provenance,
+        catalog_name=catalog.name,
     )

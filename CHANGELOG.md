@@ -6,6 +6,39 @@ All notable changes to this project will be documented here. Format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-13
+
+### Added
+- `CertifiedBound` gains three fields the persisted certificate needs to be
+  audit-readable: `library_version` (auto-populated from
+  ``importlib.metadata``), `delta_provenance` (caller-declared label for
+  how Delta was obtained), and `catalog_name`. Existing call sites that
+  do not set them continue to work; defaults are honest
+  (`delta_provenance="user_supplied"`).
+- `DeltaProvenance` Literal alias listing the library-recognised
+  provenance labels: ``"user_supplied"``, ``"closed_form_bernoulli"``,
+  ``"from_rdms"``, ``"ucb_random_pauli"``, ``"ucb_subword"``,
+  ``"ucb_majorana"``, ``"ucb_matchgate_shadows"``. The field type is
+  free-form ``str`` so callers integrating with custom estimators may
+  use their own labels.
+
+### Changed
+- `certify()` accepts a `delta_provenance` keyword argument (default
+  ``"user_supplied"``) that flows onto the returned `CertifiedBound`.
+- `adapters._common.package_estimate` accepts and forwards
+  `delta_provenance` to `certify()`.
+- The three adapter routes auto-label their certificates:
+  `pyscf.from_mean_field` -> `"closed_form_bernoulli"`,
+  `pyscf.from_rdms` -> `"from_rdms"`,
+  `qiskit_nature.from_problem` -> `"closed_form_bernoulli"`.
+
+### Notes
+- No persistence API is added. `dataclasses.asdict(result)` plus
+  `json.dump` is the recommended pattern; the new fields make that
+  output a usable scientific artefact.
+- `notebooks/01_quickstart.ipynb` rewritten as a concrete worked
+  example with expected-vs-actual numbers at every step.
+
 ## [0.4.0] - 2026-05-13
 
 ### Added

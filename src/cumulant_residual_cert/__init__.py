@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from . import constants
 from .catalog import Catalog, FermionicWord, word
-from .certify import CertifiedBound, certify
+from .certify import CertifiedBound, DeltaProvenance, certify
 from .diagnostic import (
     UCBResult,
     UCBSplitResult,
@@ -25,6 +25,7 @@ from .diagnostic import (
 __all__ = [
     "Catalog",
     "CertifiedBound",
+    "DeltaProvenance",
     "FermionicWord",
     "UCBResult",
     "UCBSplitResult",
@@ -37,4 +38,4 @@ __all__ = [
     "word",
 ]
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
