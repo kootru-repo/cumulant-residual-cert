@@ -35,7 +35,7 @@ references:
     repository-code: "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
     year: 2026
   - type: article
-    title: "Charge-filtered cumulant residual bounds for charge-neutral fermionic-word observables on U(1)-invariant states"
+    title: "Charge- and block-refined bias bounds for second-order cumulant truncation on U(1)-invariant fermionic states"
     authors:
       - family-names: Craton
         given-names: Andrew

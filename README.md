@@ -195,8 +195,8 @@ Please cite both the library and the underlying reproducibility deposit. A machi
 ```bibtex
 @unpublished{craton_charge_filtered_cumulant_residuals_manuscript,
   author       = {Craton, Andrew},
-  title        = {Charge-filtered cumulant residual bounds for charge-neutral
-                  fermionic-word observables on {$U(1)$}-invariant states},
+  title        = {Charge- and block-refined bias bounds for second-order
+                  cumulant truncation on {$U(1)$}-invariant fermionic states},
   organization = {Kootru Labs},
   year         = {2026},
   note         = {Manuscript in preparation}
