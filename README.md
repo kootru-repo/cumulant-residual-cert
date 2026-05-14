@@ -8,6 +8,10 @@ $U(1)$-invariant states.
 > bias, in one function call.
 
 [![Open quickstart in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb)
+[![Open cookbook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb)
+
+- [`01_quickstart.ipynb`](notebooks/01_quickstart.ipynb): the theorem in action on a concrete worked example, with expected vs actual numbers at every step.
+- [`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb): nine recipes for applying the certificate to your own state, RDM data, shadow data, custom catalog, or workflow-decision context.
 
 ## Install
 
