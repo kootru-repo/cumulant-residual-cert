@@ -7,13 +7,34 @@ $U(1)$-invariant states.
 > observable, this library produces a rigorous upper bound on the truncation
 > bias, in one function call.
 
-[![Open tutorial in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/00_tutorial.ipynb)
-[![Open quickstart in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb)
-[![Open cookbook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb)
+## Where to start
 
-- [`00_tutorial.ipynb`](notebooks/00_tutorial.ipynb): the front door. The inequality + a decision tree mapping your situation to one of four paths + one concrete state walked through all four side by side + the go/no-go rule against your tolerance.
-- [`01_quickstart.ipynb`](notebooks/01_quickstart.ipynb): the theorem in action on a concrete worked example, with expected vs actual numbers at every step.
-- [`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb): nine recipes for applying the certificate to your own state, RDM data, shadow data, custom catalog, or workflow-decision context.
+Click the Colab badge that matches your state of mind. All notebooks run end-to-end with no API keys.
+
+| If you are... | Start here | Time |
+| --- | --- | --- |
+| New to the library; don't yet know which path applies to your problem | [![Open tutorial][cb]][tut] **`00_tutorial.ipynb`** | ~10 min |
+| Want to see the theorem work on a concrete example before trusting it | [![Open quickstart][cb]][qs] **`01_quickstart.ipynb`** | ~5 min |
+| Have a specific workflow in mind; need the code, not the theory | [![Open cookbook][cb]][cb-nb] **`05_cookbook.ipynb`** | scan |
+
+[cb]: https://colab.research.google.com/assets/colab-badge.svg
+[tut]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/00_tutorial.ipynb
+[qs]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb
+[cb-nb]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb
+
+### What you get from each notebook
+
+- **[`00_tutorial.ipynb`](notebooks/00_tutorial.ipynb)** — the front door. You'll leave knowing the one inequality the whole library is about, which of four paths fits your situation, and what the same physical state's certificate looks like through every path side by side. Closes with the go/no-go decision rule against your tolerance. *For users who don't know which adapter or diagnostic to use yet.*
+
+- **[`01_quickstart.ipynb`](notebooks/01_quickstart.ipynb)** — the theorem made concrete. A small two-electron correlated state, the actual bias number $|⟨W⟩_\text{true} - ⟨W⟩_\text{trunc}|$, the certified bound $C_W·\Delta$, and a visible $21\times$ tightening from universal to block-refined. *For users who want to see the math work before relying on it.*
+
+- **[`02_bernoulli_worked.ipynb`](notebooks/02_bernoulli_worked.ipynb)** — proof at machine precision. A random Bernoulli product state at $n=6$, every catalog cumulant evaluated directly, and $\Delta = 0$ confirmed to float-64 zero. *For users who want to see the worked-example theorem hold up numerically before they trust the closed-form $\Delta = 0$ claim for Hartree-Fock baselines.*
+
+- **[`03_pyscf_hartree_fock.ipynb`](notebooks/03_pyscf_hartree_fock.ipynb)** — end-to-end PySCF adapter on H₂ STO-3G. Converged RHF in three lines, certificate in one. *For users who already run PySCF and want the canonical drop-in workflow.*
+
+- **[`04_real_shadow_data.ipynb`](notebooks/04_real_shadow_data.ipynb)** — pluggable shadow-data routing. Simulator branch runs out of the box; IBM Quantum Runtime, Rigetti Forest, IonQ, and IQM Resonance stubs are documented and ready to wire. *For users who have shadow records from a real measurement and need to plug them in.*
+
+- **[`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb)** — nine direct recipes: HF baseline, post-HF from RDMs, random-Pauli shadows, matchgate shadows, custom catalog, JSON persistence, go/no-go decision rule, level selection, OpenFermion / Qiskit-Nature operator conversion. *For users who know what they want and need a copy-paste solution.*
 
 ## Install
 
