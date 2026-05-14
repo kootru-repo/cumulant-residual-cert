@@ -72,32 +72,57 @@ def test_golden_json_bhat_charge_set_is_canonical():
 
 
 def test_audit_repo_cross_check():
-    """Cross-check the constants against the audit repo's independent enumeration."""
+    """Cross-check the constants against the audit repo's independent enumeration.
+
+    The audit repo's published layout (``src/connected_layer_sector/``) uses a
+    closed-form polynomial parameterisation keyed by ``(h, z)`` (number of
+    paired charged letters and number of zero-charge letters), whereas this
+    library uses direct enumeration keyed by an explicit ``charges`` tuple.
+    Both routes compute the same theorem; the cross-check verifies the two
+    independent implementations agree numerically on every catalog word.
+
+    The block-refined constant $\\widehat B^{\\mathrm{charge}}_r$ is not yet
+    exposed by the audit repo as a top-level function; only the universal and
+    charge-filtered constants are cross-checked here.
+    """
     audit_path_env = os.environ.get("AUDIT_REPO_PATH")
     if audit_path_env is None:
         pytest.skip("AUDIT_REPO_PATH not set; skipping audit cross-check")
     audit_path = Path(audit_path_env)
-    if not (audit_path / "verification" / "partition_lattice.py").exists():
+    audit_module_path = audit_path / "src" / "connected_layer_sector" / "constants.py"
+    if not audit_module_path.exists():
         pytest.skip(
-            f"AUDIT_REPO_PATH={audit_path} does not look like the audit checkout"
+            f"AUDIT_REPO_PATH={audit_path} does not look like the audit checkout "
+            f"(no src/connected_layer_sector/constants.py)"
         )
 
-    sys.path.insert(0, str(audit_path))
+    sys.path.insert(0, str(audit_path / "src"))
     try:
-        from verification.partition_lattice import (  # type: ignore[import-not-found]
+        from connected_layer_sector.constants import (  # type: ignore[import-not-found]
             B_charge_r as audit_B_charge_r,
-        )
-        from verification.partition_lattice import (
-            B_r as audit_B_r,
-        )
-        from verification.partition_lattice import (
-            Bhat_charge_r as audit_Bhat_charge_r,
+            B_r_const as audit_B_r,
         )
     finally:
         sys.path.pop(0)
 
     cat = Catalog.chemistry_r4()
-    assert audit_B_r(cat.r) == constants.universal(cat.r)
+    # B_r: audit returns float; library returns int. Compare as integers.
+    assert int(audit_B_r(cat.r)) == constants.universal(cat.r)
+
+    # B^charge_r: audit takes (h, z, r) where
+    #   h = number of paired +1/-1 letters; z = number of zero-charge letters.
+    # Translate each catalog word's charges to (h, z).
     for w in cat:
-        assert audit_B_charge_r(cat.r, w.charges) == constants.charge_filtered(cat.r, w)
-        assert audit_Bhat_charge_r(cat.r, w.charges) == constants.block_refined(cat.r, w)
+        positives = sum(1 for c in w.charges if c == +1)
+        negatives = sum(1 for c in w.charges if c == -1)
+        zeros = sum(1 for c in w.charges if c == 0)
+        assert positives == negatives, (
+            f"word {w.name!r} should be charge-neutral; got {w.charges}"
+        )
+        h, z = positives, zeros
+        audit_value = int(round(audit_B_charge_r(h, z, cat.r)))
+        library_value = constants.charge_filtered(cat.r, w)
+        assert audit_value == library_value, (
+            f"word {w.name!r} (h={h}, z={z}): audit gave {audit_value}, "
+            f"library gave {library_value}"
+        )
