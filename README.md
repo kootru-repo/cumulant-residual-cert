@@ -30,11 +30,9 @@ Click the Colab badge that matches your state of mind. All notebooks run end-to-
 
 - **[`02_bernoulli_worked.ipynb`](notebooks/02_bernoulli_worked.ipynb)** — proof at machine precision. A random Bernoulli product state at $n=6$, every catalog cumulant evaluated directly, and $\Delta = 0$ confirmed to float-64 zero. *For users who want to see the worked-example theorem hold up numerically before they trust the closed-form $\Delta = 0$ claim for Hartree-Fock baselines.*
 
-- **[`03_pyscf_hartree_fock.ipynb`](notebooks/03_pyscf_hartree_fock.ipynb)** — end-to-end PySCF adapter on H₂ STO-3G. Converged RHF in three lines, certificate in one. *For users who already run PySCF and want the canonical drop-in workflow.*
-
 - **[`04_real_shadow_data.ipynb`](notebooks/04_real_shadow_data.ipynb)** — pluggable shadow-data routing. Simulator branch runs out of the box; IBM Quantum Runtime, Rigetti Forest, IonQ, and IQM Resonance stubs are documented and ready to wire. *For users who have shadow records from a real measurement and need to plug them in.*
 
-- **[`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb)** — nine direct recipes: HF baseline, post-HF from RDMs, random-Pauli shadows, matchgate shadows, custom catalog, JSON persistence, go/no-go decision rule, level selection, OpenFermion / Qiskit-Nature operator conversion. *For users who know what they want and need a copy-paste solution.*
+- **[`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb)** — nine direct recipes: HF baseline (end-to-end PySCF on H₂ STO-3G), post-HF from RDMs, random-Pauli shadows, matchgate shadows, custom catalog, JSON persistence, go/no-go decision rule, level selection, OpenFermion / Qiskit-Nature operator conversion. *For users who know what they want and need a copy-paste solution.*
 
 ## Install
 
