@@ -133,6 +133,7 @@ def from_mean_field(
         framework="pyscf",
         level=level,
         notes=notes,
+        delta_provenance="closed_form_bernoulli",
     )
 
 
@@ -232,4 +233,5 @@ def from_rdms(
         framework="pyscf",
         level=level,
         notes=notes,
+        delta_provenance="from_rdms",
     )

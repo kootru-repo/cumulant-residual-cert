@@ -152,4 +152,5 @@ def from_problem(
         framework="qiskit_nature",
         level=level,
         notes=notes,
+        delta_provenance="closed_form_bernoulli",
     )

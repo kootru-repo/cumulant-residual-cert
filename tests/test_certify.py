@@ -76,3 +76,73 @@ def test_certify_universal_matches_b_r():
     result = certify(cat, delta=1.0, level="universal")
     Bu = constants.universal(cat.r)
     assert all(c == Bu for c in result.constants_used.values())
+
+
+# ----- provenance + persisted-certificate fields (v0.5) -----
+
+
+def test_certify_defaults_provenance_to_user_supplied():
+    cat = Catalog.chemistry_r4()
+    result = certify(cat, delta=0.01)
+    assert result.delta_provenance == "user_supplied"
+
+
+def test_certify_passes_through_caller_provenance():
+    cat = Catalog.chemistry_r4()
+    result = certify(cat, delta=0.01, delta_provenance="ucb_random_pauli")
+    assert result.delta_provenance == "ucb_random_pauli"
+
+
+def test_certify_captures_catalog_name():
+    cat = Catalog.chemistry_r4()
+    assert cat.name == "chemistry_r4"
+    result = certify(cat, delta=0.01)
+    assert result.catalog_name == "chemistry_r4"
+
+
+def test_certify_records_library_version():
+    """library_version is populated from importlib.metadata at construction time."""
+    cat = Catalog.chemistry_r4()
+    result = certify(cat, delta=0.01)
+    # In an installed environment the version matches the package metadata;
+    # in a not-installed-from-source environment it falls back to "unknown".
+    assert result.library_version, "library_version must be a non-empty string"
+
+
+def test_certified_bound_round_trips_through_asdict_and_json():
+    """The certificate dataclass serializes losslessly via stdlib only."""
+    import json
+    from dataclasses import asdict
+
+    cat = Catalog.chemistry_r4()
+    result = certify(
+        cat,
+        delta=0.012,
+        level="block_refined",
+        delta_provenance="from_rdms",
+    )
+    payload = asdict(result)
+    encoded = json.dumps(payload, sort_keys=True)
+    decoded = json.loads(encoded)
+    # Spot-check the structural fields a downstream auditor would read.
+    assert decoded["delta"] == 0.012
+    assert decoded["level"] == "block_refined"
+    assert decoded["delta_provenance"] == "from_rdms"
+    assert decoded["catalog_name"] == "chemistry_r4"
+    assert set(decoded["bounds"]) == {w.name for w in cat}
+    assert isinstance(decoded["library_version"], str) and decoded["library_version"]
+
+
+def test_pyscf_from_mean_field_records_closed_form_bernoulli_provenance():
+    """The PySCF Bernoulli helper labels its certificate honestly."""
+    pytest.importorskip("pyscf", reason="PySCF not installed")
+    from pyscf import gto, scf
+
+    from cumulant_residual_cert.adapters.pyscf import from_mean_field
+
+    mol = gto.M(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g", verbose=0)
+    mf = scf.RHF(mol).run(conv_tol=1e-10)
+    cat = Catalog.chemistry_r4()
+    est = from_mean_field(mf, cat, user_asserts_bernoulli_class=True)
+    assert est.bound.delta_provenance == "closed_form_bernoulli"
+    assert est.bound.catalog_name == "chemistry_r4"
