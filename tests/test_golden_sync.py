@@ -81,9 +81,9 @@ def test_audit_repo_cross_check():
     Both routes compute the same theorem; the cross-check verifies the two
     independent implementations agree numerically on every catalog word.
 
-    The block-refined constant $\\widehat B^{\\mathrm{charge}}_r$ is not yet
-    exposed by the audit repo as a top-level function; only the universal and
-    charge-filtered constants are cross-checked here.
+    Cross-checks all three constants: universal $B_r$, charge-filtered
+    $B^{\\mathrm{charge}}_r(W)$, and block-refined
+    $\\widehat B^{\\mathrm{charge}}_r(W)$.
     """
     audit_path_env = os.environ.get("AUDIT_REPO_PATH")
     if audit_path_env is None:
@@ -101,6 +101,7 @@ def test_audit_repo_cross_check():
         from connected_layer_sector.constants import (  # type: ignore[import-not-found]
             B_charge_r as audit_B_charge_r,
             B_r_const as audit_B_r,
+            Bhat_charge_r as audit_Bhat_charge_r,
         )
     finally:
         sys.path.pop(0)
@@ -120,9 +121,15 @@ def test_audit_repo_cross_check():
             f"word {w.name!r} should be charge-neutral; got {w.charges}"
         )
         h, z = positives, zeros
-        audit_value = int(round(audit_B_charge_r(h, z, cat.r)))
-        library_value = constants.charge_filtered(cat.r, w)
-        assert audit_value == library_value, (
-            f"word {w.name!r} (h={h}, z={z}): audit gave {audit_value}, "
-            f"library gave {library_value}"
+        audit_charge = int(round(audit_B_charge_r(h, z, cat.r)))
+        library_charge = constants.charge_filtered(cat.r, w)
+        assert audit_charge == library_charge, (
+            f"word {w.name!r} (h={h}, z={z}): "
+            f"B_charge audit={audit_charge}, library={library_charge}"
+        )
+        audit_block_refined = int(round(audit_Bhat_charge_r(h, z, cat.r)))
+        library_block_refined = constants.block_refined(cat.r, w)
+        assert audit_block_refined == library_block_refined, (
+            f"word {w.name!r} (h={h}, z={z}): "
+            f"Bhat audit={audit_block_refined}, library={library_block_refined}"
         )
