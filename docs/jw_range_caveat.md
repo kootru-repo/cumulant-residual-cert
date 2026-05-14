@@ -23,14 +23,17 @@ easily exceed $10^6$.
 
 1. **Matchgate / fermionic-Gaussian shadows.** Replace the random-Pauli range
    factor with the matchgate range factor, which avoids the JW penalty entirely.
-   A `cumulant_residual_cert.adapters.openfermion.delta_ucb_from_matchgate_shadows`
-   wrapper is reserved as a planned later-release API; the current function
-   raises ``NotImplementedError`` until the wiring is firmed up.
+   `cumulant_residual_cert.adapters.openfermion.delta_ucb_from_matchgate_shadows`
+   is a thin wrapper: supply per-Majorana-product `(mean, radius)` estimates
+   from your matchgate-shadow protocol and the library handles the rest
+   (dictionary-to-Majorana decomposition + Mobius assembly). A built-in
+   matchgate-snapshot estimator is planned for a later release.
 
-2. **Compute $\Delta$ from RDMs analytically.** For workflows whose post-HF
-   state has 1- and 2-RDMs available, evaluating the catalog cumulants directly
-   sidesteps shadow estimation entirely. Available via the PySCF adapter
-   `from_rdms()` in a later release.
+2. **Compute $\Delta$ from RDMs analytically.** For post-HF states with
+   1-, 2-, 3-, 4-RDMs available (e.g. produced by PySCF CISD / CASCI / FCI),
+   `cumulant_residual_cert.adapters.pyscf.from_rdms` evaluates the catalog
+   cumulants directly via the Mobius formula, sidestepping shadow estimation
+   entirely.
 
 3. **Use $\Delta$ as a go/no-go signal at a chosen tolerance.** If you know
    only that $\Delta \le 0.05$ for your state, plug $0.05$ into `certify()`

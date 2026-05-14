@@ -7,10 +7,19 @@ probability $\\ge 1 - \\alpha$ simultaneously over the catalog.
 
 The implementation Bonferroni-corrects over every Pauli string appearing in
 any subword expansion, then propagates Hoeffding radii through the Mobius
-transform. A full sample-splitting variant is on the later-release roadmap;
-the current estimator re-uses the entire shadow record for every Pauli mean,
-which gives a valid union bound and is the right starting point for the
-current release.
+transform. Two public entry points consume shadow data:
+
+- :func:`delta_ucb` reuses the entire shadow record for every Pauli mean
+  (a valid union bound). This is the recommended default.
+- :func:`delta_ucb_split` implements the manuscript's sample-split form:
+  the shadow record is split into a diagnostic half (drives the bound)
+  and a holdout half (returned to the caller for downstream estimation or
+  empirical-Bernstein refinement).
+
+Both feed through :func:`_ucb_from_subword_moments`. Protocol-agnostic
+entry points (:func:`delta_ucb_from_subword_moments`,
+:func:`delta_ucb_from_majorana_moments`) accept user-supplied
+``(mean, radius)`` estimates directly, bypassing the dense Pauli expansion.
 
 > **Range note.** Random Pauli shadows incur a $3^{|P|}$ range factor per Pauli
 > $P$, which makes the bound data-hungry for word lengths $r \\ge 3$. For
@@ -285,9 +294,19 @@ def delta_ucb_from_subword_moments(
                 f"per_subword[{w.name!r}] missing entries for blocks: {sorted(missing)}"
             )
         for key, (mean_val, rad_val) in subword_data.items():
+            import math
+            if not math.isfinite(rad_val):
+                raise ValueError(
+                    f"per_subword[{w.name!r}][{key}]: radius must be finite; got {rad_val}"
+                )
             if rad_val < 0:
                 raise ValueError(
                     f"per_subword[{w.name!r}][{key}]: radius must be >= 0; got {rad_val}"
+                )
+            mean_complex = complex(mean_val)
+            if not (math.isfinite(mean_complex.real) and math.isfinite(mean_complex.imag)):
+                raise ValueError(
+                    f"per_subword[{w.name!r}][{key}]: mean must be finite; got {mean_val}"
                 )
 
     return _ucb_from_subword_moments(
@@ -435,7 +454,7 @@ def delta_ucb_from_majorana_moments(
     *,
     confidence: float = 0.95,
     n_protocol_terms: int,
-    require_all_terms: bool = False,
+    require_all_terms: bool = True,
 ) -> UCBResult:
     """UCB pipeline from per-Majorana-product (mean, radius) estimates.
 
@@ -464,14 +483,19 @@ def delta_ucb_from_majorana_moments(
     n_protocol_terms : int
         Number of distinct Majorana products counted in the Bonferroni
         union. Reported on the result as ``n_paulis``.
-    require_all_terms : bool, default False
-        When False, any Majorana product that appears in a catalog subword
-        decomposition but is missing from ``majorana_moments`` is taken as
-        $(0, 0)$. This is exact for odd-degree Majorana products on
-        $U(1)$-invariant states; missing even-degree entries are
-        silently treated as zero (which under-estimates the radius and may
-        invalidate the bound). When True, every appearing term must be
-        present; missing entries raise ``ValueError``.
+    require_all_terms : bool, default True
+        When True (default), every Majorana product that appears in a
+        catalog subword decomposition must be present in
+        ``majorana_moments``; missing entries raise ``ValueError``. This
+        is the safe default for a certification API.
+
+        When False, missing entries are taken as $(0, 0)$. This is exact
+        for odd-degree Majorana products on $U(1)$-invariant states (their
+        expectation is zero by symmetry), but missing **even-degree**
+        entries are also silently treated as zero radius, which
+        under-estimates the bound and can invalidate the certificate.
+        Opt in to ``False`` only when you have independently verified
+        that all missing terms are odd-degree.
 
     Returns
     -------
@@ -610,26 +634,27 @@ def delta_ucb_split(
     if seed is None:
         # Deterministic even/odd split. With fraction_diagnostic = 0.5 this
         # gives an exact 50/50 split (M even) or 50/50 +/-1 (M odd).
-        n_diag = int(round(fraction_diagnostic * M))
-        diag_indices = tuple(range(0, M, 2))[:n_diag] if fraction_diagnostic == 0.5 else tuple(range(n_diag))
         if fraction_diagnostic == 0.5:
-            # use full even/odd partitioning
             diag_indices = tuple(i for i in range(M) if i % 2 == 0)
             hold_indices = tuple(i for i in range(M) if i % 2 == 1)
         else:
+            n_diag = int(round(fraction_diagnostic * M))
             diag_indices = tuple(range(n_diag))
             hold_indices = tuple(range(n_diag, M))
     else:
         rng = np.random.default_rng(seed)
         order = rng.permutation(M)
         n_diag = int(round(fraction_diagnostic * M))
-        if n_diag == 0 or n_diag == M:
-            raise ValueError(
-                "fraction_diagnostic produces an empty half; pick a fraction "
-                "that leaves at least 1 shot on each side"
-            )
         diag_indices = tuple(int(i) for i in order[:n_diag])
         hold_indices = tuple(int(i) for i in order[n_diag:])
+
+    if len(diag_indices) == 0 or len(hold_indices) == 0:
+        raise ValueError(
+            f"fraction_diagnostic={fraction_diagnostic!r} on M={M} shots "
+            f"produces an empty half (diag={len(diag_indices)}, "
+            f"hold={len(hold_indices)}); pick a fraction that leaves at "
+            "least 1 shot on each side"
+        )
 
     diag = [shots[i] for i in diag_indices]
     ucb = delta_ucb(

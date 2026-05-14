@@ -5,7 +5,7 @@ electronic-structure problem in `PySCF <https://pyscf.org>`_ and wants to
 attach a deterministic bias bar to a cumulant-truncated estimate of some
 fermionic-word observable.
 
-One route ships currently:
+Two routes ship currently:
 
 - :func:`from_mean_field`: a closed-form $\\Delta = 0$ for the Bernoulli class
   (HF / DFT determinant in its canonical orbital basis, single-Slater pure
@@ -13,9 +13,11 @@ One route ships currently:
   of a number-conserving free Hamiltonian diagonal in the same orbital basis).
   This state class is covered by the underlying worked-example theorem.
 
-A general :func:`from_rdms` route that evaluates $\\Delta$ from supplied
-RDMs is on the later-release roadmap. The signature is reserved here for forward
-compatibility; calling it raises ``NotImplementedError`` currently.
+- :func:`from_rdms`: evaluates $\\Delta_{r, U(1)}^{\\mathrm{cat}}(\\rho)$
+  exactly from user-supplied spin-orbital 1- through 4-RDMs by the Mobius
+  formula plus in-house fermionic normal-ordering. Unlocks post-HF states
+  (CISD, CASCI, FCI) without any additional measurement beyond what the
+  chemistry code already produces.
 
 Install with::
 
@@ -211,6 +213,45 @@ def from_rdms(
             f"sites_per_word has {len(sites_per_word)} entries but catalog "
             f"has {len(catalog)} words"
         )
+
+    # Per-word: validate that the supplied site assignment has the right
+    # length, that every site index is a positive 1-based integer, and
+    # that the catalog word's letters do not refer to duplicate sites.
+    n_orb = rdm1.shape[0]
+    if rdm1.ndim != 2 or rdm1.shape[0] != rdm1.shape[1]:
+        raise ValueError(
+            f"rdm1 must be a square 2D tensor; got shape {rdm1.shape}"
+        )
+    for k, rdm_k in (("rdm2", rdm2), ("rdm3", rdm3), ("rdm4", rdm4)):
+        if rdm_k is None:
+            continue
+        rank = {"rdm2": 4, "rdm3": 6, "rdm4": 8}[k]
+        if rdm_k.ndim != rank:
+            raise ValueError(
+                f"{k} must have rank {rank}; got ndim {rdm_k.ndim}"
+            )
+        if any(d != n_orb for d in rdm_k.shape):
+            raise ValueError(
+                f"{k} must have every dimension == n_orb = {n_orb}; "
+                f"got shape {rdm_k.shape}"
+            )
+
+    for w, sites in zip(catalog, sites_per_word):
+        if len(sites) != w.length:
+            raise ValueError(
+                f"word {w.name!r} has length {w.length} but {len(sites)} "
+                f"sites supplied"
+            )
+        sites_t = tuple(int(s) for s in sites)
+        if len(set(sites_t)) != len(sites_t):
+            raise ValueError(
+                f"word {w.name!r} has duplicate site indices: {sites_t}"
+            )
+        for s in sites_t:
+            if not (1 <= s <= n_orb):
+                raise ValueError(
+                    f"word {w.name!r} site {s} is outside 1..n_orb={n_orb}"
+                )
 
     cumulants: dict[str, complex] = {}
     for w, sites in zip(catalog, sites_per_word):

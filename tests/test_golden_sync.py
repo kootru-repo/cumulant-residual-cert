@@ -133,3 +133,43 @@ def test_audit_repo_cross_check():
             f"word {w.name!r} (h={h}, z={z}): "
             f"Bhat audit={audit_block_refined}, library={library_block_refined}"
         )
+
+
+def test_audit_catalog_covers_all_five_chemistry_word_types():
+    """Cross-check that the audit-side enumerate_chemistry_catalog emits all
+    five Corollary 1 word types.
+
+    This catches the failure mode where the constants functions know about
+    a word type but the catalog enumerator that feeds the live audit
+    pipeline does not produce instances of it. (Historically the audit's
+    early enumerator omitted the a^dag a n n word type while the constants
+    module had complete coverage; this test guards against that drift
+    coming back.)
+    """
+    audit_path_env = os.environ.get("AUDIT_REPO_PATH")
+    if audit_path_env is None:
+        pytest.skip("AUDIT_REPO_PATH not set; skipping audit cross-check")
+    audit_path = Path(audit_path_env)
+    audit_catalog_path = audit_path / "src" / "connected_layer_sector" / "catalog.py"
+    if not audit_catalog_path.exists():
+        pytest.skip(
+            f"AUDIT_REPO_PATH={audit_path} does not have "
+            f"src/connected_layer_sector/catalog.py"
+        )
+
+    sys.path.insert(0, str(audit_path / "src"))
+    try:
+        from connected_layer_sector import (  # type: ignore[import-not-found]
+            enumerate_chemistry_catalog as audit_enumerate,
+        )
+    finally:
+        sys.path.pop(0)
+
+    catalog_entries = audit_enumerate(n=5)
+    labels_present = {entry[0] for entry in catalog_entries}
+    expected_labels = {"nnn", "nnnn", "hopn", "doublex", "hopnn"}
+    missing = expected_labels - labels_present
+    assert not missing, (
+        f"audit catalog enumerator missing word-type labels: {missing}; "
+        f"present: {labels_present}"
+    )

@@ -18,7 +18,7 @@ pip install "cumulant_residual_cert[qiskit-nature]@${GIT}"
 pip install "cumulant_residual_cert[all]@${GIT}"
 ```
 
-Pin to a release by appending `@v0.4.0` (or another tag) to the git URL.
+Pin to a release by appending `@v0.5.0` (or another tag) to the git URL.
 
 ## 30 seconds
 
@@ -55,8 +55,10 @@ Three honest options, in order of cost:
    $\Delta = 0$ on this class, and the
    [PySCF adapter](api.md) returns this exactly for canonical Hartree-Fock.
 
-2. **Direct evaluation** from supplied RDMs. Available in a later release via
-   `cumulant_residual_cert.adapters.pyscf.from_rdms`.
+2. **Direct evaluation** from supplied RDMs via
+   `cumulant_residual_cert.adapters.pyscf.from_rdms`. Pass 1-, 2-, 3-, 4-RDMs
+   in spin-orbital convention; the Mobius formula evaluates $\Delta$ exactly
+   under $U(1)$-invariance.
 
 3. **Shadow estimation** via the UCB diagnostic
    `cumulant_residual_cert.delta_ucb`. Returns an upper bound on

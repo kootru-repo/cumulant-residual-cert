@@ -10,10 +10,14 @@ Currently shipped:
   and :func:`catalog_to_fermion_operators`, so catalog words can be fed to
   OpenFermion's measurement-grouping or shadow-protocol utilities.
 
-A wrapper that consumes matchgate / fermionic-Gaussian shadow records and
-runs the UCB diagnostic without the $3^{|P|}$ random-Pauli range penalty
-is reserved at :func:`delta_ucb_from_matchgate_shadows` and will ship in
-a later release; current invocation raises ``NotImplementedError``.
+- :func:`delta_ucb_from_matchgate_shadows`: thin wrapper that accepts
+  user-supplied per-Majorana-product ``(mean, radius)`` estimates from a
+  matchgate / fermionic-Gaussian shadow protocol and routes them through
+  :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`. The
+  matchgate route avoids the random-Pauli $3^{|P|}$ Jordan-Wigner range
+  penalty. A built-in matchgate-snapshot estimator (Pfaffian +
+  orthogonal-matrix algebra) is planned for a later release; the current
+  wrapper expects the caller to perform the snapshot estimation.
 
 Install with::
 
@@ -122,7 +126,7 @@ def delta_ucb_from_matchgate_shadows(
     *,
     confidence: float = 0.95,
     n_protocol_terms: int,
-    require_all_terms: bool = False,
+    require_all_terms: bool = True,
 ) -> Any:
     """UCB diagnostic on matchgate / fermionic-Gaussian shadow output.
 
@@ -158,11 +162,14 @@ def delta_ucb_from_matchgate_shadows(
     confidence : float, default 0.95
     n_protocol_terms : int
         Number of distinct Majorana products in the Bonferroni union.
-    require_all_terms : bool, default False
-        If True, raise on any missing Majorana product entry that appears
-        in a catalog subword decomposition. If False, missing entries are
+    require_all_terms : bool, default True
+        If True (default), raise on any missing Majorana product entry
+        that appears in a catalog subword decomposition. This is the safe
+        default for a certification API. If False, missing entries are
         treated as $(0, 0)$; this is exact for odd-degree products on
-        $U(1)$-invariant states but unsafe for missing even-degree entries.
+        $U(1)$-invariant states but unsafe for missing even-degree
+        entries. Opt in to ``False`` only after verifying that all
+        missing terms are odd-degree.
 
     Returns
     -------

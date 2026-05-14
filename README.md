@@ -22,7 +22,7 @@ Click the Colab badge that matches your state of mind. All notebooks run end-to-
 [qs]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb
 [cb-nb]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb
 
-> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals): audit pipeline, formal proofs, mutation harness, adversarial-search harness, and SHA256-pinned data deposit. The present library is the user-facing companion; its constants table is CI-checked against that repo's independent enumeration on every push.
+> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals): claim-indexed audit notebooks, pytest suite with explicit assertions on the manuscript headlines, lightweight mutation sanity harness, SHA256-pinned deposited data, and Binder for one-click reproduction. The present library is the user-facing companion; its catalog constants are CI-checked against that repo's independent implementation on every push.
 
 ### What you get from each notebook
 
@@ -51,7 +51,7 @@ pip install "cumulant_residual_cert[qiskit-nature]@${GIT}"
 pip install "cumulant_residual_cert[all]@${GIT}"
 ```
 
-Pin to a specific release by appending `@v0.4.0` (or another tag) to the
+Pin to a specific release by appending `@v0.5.0` (or another tag) to the
 git URL.
 
 ## 30-second example

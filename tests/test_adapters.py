@@ -258,22 +258,44 @@ def test_qiskit_nature_from_problem_requires_bernoulli_assertion():
 
 
 def test_openfermion_matchgate_wrapper_routes_through_majorana_pipeline():
-    """The matchgate wrapper now works as a thin router (no longer NotImplementedError)."""
+    """The matchgate wrapper routes empty input to a zero UCB when the
+    caller explicitly opts in to require_all_terms=False."""
     pytest.importorskip("openfermion", reason="OpenFermion not installed")
     from cumulant_residual_cert.adapters.openfermion import delta_ucb_from_matchgate_shadows
 
     cat = Catalog.chemistry_r4()
     sites = [(1, 2, 3), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
     # Empty majorana_moments: every term defaults to (0, 0), giving a zero UCB.
+    # This requires opt-in because the safe default is to raise on missing
+    # entries (certification API).
     result = delta_ucb_from_matchgate_shadows(
         majorana_moments={},
         catalog=cat,
         sites_per_word=sites,
         confidence=0.95,
         n_protocol_terms=0,
+        require_all_terms=False,
     )
     assert result.delta_ucb == 0.0
     assert result.confidence == 0.95
+
+
+def test_openfermion_matchgate_wrapper_default_raises_on_missing():
+    """Default require_all_terms=True raises if a needed Majorana product
+    is missing from the supplied dict."""
+    pytest.importorskip("openfermion", reason="OpenFermion not installed")
+    from cumulant_residual_cert.adapters.openfermion import delta_ucb_from_matchgate_shadows
+
+    cat = Catalog.chemistry_r4()
+    sites = [(1, 2, 3), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
+    with pytest.raises(ValueError, match="missing required entry"):
+        delta_ucb_from_matchgate_shadows(
+            majorana_moments={},
+            catalog=cat,
+            sites_per_word=sites,
+            confidence=0.95,
+            n_protocol_terms=0,
+        )
 
 
 def test_openfermion_matchgate_wrapper_propagates_nonzero_moments():
@@ -284,7 +306,9 @@ def test_openfermion_matchgate_wrapper_propagates_nonzero_moments():
     cat = Catalog.chemistry_r4()
     sites = [(1, 2, 3), (1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4)]
     # Inject a small radius on the identity Majorana product. n_p
-    # decompositions all contain the identity coefficient 1/2.
+    # decompositions all contain the identity coefficient 1/2. We opt in to
+    # require_all_terms=False so missing higher-order terms are treated as
+    # zero for this minimal test.
     majorana = {(): (1.0 + 0j, 0.1)}
     result = delta_ucb_from_matchgate_shadows(
         majorana_moments=majorana,
@@ -292,6 +316,7 @@ def test_openfermion_matchgate_wrapper_propagates_nonzero_moments():
         sites_per_word=sites,
         confidence=0.95,
         n_protocol_terms=1,
+        require_all_terms=False,
     )
     # Identity propagated through length-3 and length-4 catalog words yields
     # a nonzero residual radius.

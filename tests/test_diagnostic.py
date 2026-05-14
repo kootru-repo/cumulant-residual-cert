@@ -381,7 +381,9 @@ def test_subword_moments_pipeline_rejects_negative_radius():
 # ----- delta_ucb_from_majorana_moments -----
 
 
-def test_majorana_moments_pipeline_zero_input_gives_zero_ucb():
+def test_majorana_moments_pipeline_zero_input_with_opt_in_gives_zero_ucb():
+    """With require_all_terms=False explicit opt-in, missing entries are
+    treated as $(0, 0)$ and the bound collapses to 0."""
     from cumulant_residual_cert import delta_ucb_from_majorana_moments
 
     cat = Catalog.chemistry_r4()
@@ -391,13 +393,16 @@ def test_majorana_moments_pipeline_zero_input_gives_zero_ucb():
         sites_per_word=_valid_sites(),
         confidence=0.95,
         n_protocol_terms=0,
+        require_all_terms=False,
     )
-    # With every term missing (treated as zero under U(1) invariance) and
-    # zero radii, the bound collapses to 0.
     assert result.delta_ucb == 0.0
 
 
-def test_majorana_moments_pipeline_require_all_terms_raises_on_missing():
+def test_majorana_moments_pipeline_default_raises_on_missing():
+    """Default require_all_terms=True is the safer behaviour: any missing
+    Majorana product that appears in a catalog subword decomposition raises
+    ValueError. This is the certification-API default; opt out only after
+    verifying that missing entries are odd-degree."""
     from cumulant_residual_cert import delta_ucb_from_majorana_moments
 
     cat = Catalog.chemistry_r4()
@@ -408,7 +413,6 @@ def test_majorana_moments_pipeline_require_all_terms_raises_on_missing():
             sites_per_word=_valid_sites(),
             confidence=0.95,
             n_protocol_terms=0,
-            require_all_terms=True,
         )
 
 
