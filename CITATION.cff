@@ -5,10 +5,12 @@ type: software
 authors:
   - family-names: Craton
     given-names: Andrew
-    affiliation: "Kootru Labs (DBA of Kootru LLC)"
+    affiliation: "Kootru Labs"
     email: "acraton@kootru.com"
     orcid: "https://orcid.org/0009-0001-2269-8599"
-    website: "https://www.kootru.com"
+    website: "https://labs.kootru.com"
+    city: "Burlington"
+    country: "US"
 repository-code: "https://github.com/kootru-repo/cumulant-residual-cert"
 url: "https://github.com/kootru-repo/cumulant-residual-cert"
 license: Apache-2.0
@@ -27,7 +29,7 @@ references:
     authors:
       - family-names: Craton
         given-names: Andrew
-        affiliation: "Kootru Labs (DBA of Kootru LLC)"
+        affiliation: "Kootru Labs"
         orcid: "https://orcid.org/0009-0001-2269-8599"
     doi: "10.5281/zenodo.20129665"
     repository-code: "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
@@ -37,6 +39,6 @@ references:
     authors:
       - family-names: Craton
         given-names: Andrew
-        affiliation: "Kootru Labs (DBA of Kootru LLC)"
+        affiliation: "Kootru Labs"
         orcid: "https://orcid.org/0009-0001-2269-8599"
     year: 2026

@@ -13,7 +13,7 @@ authors = [
     { name = "Andrew Craton", email = "acraton@kootru.com" },
 ]
 maintainers = [
-    { name = "Kootru Labs (DBA of Kootru LLC)", email = "acraton@kootru.com" },
+    { name = "Kootru Labs", email = "acraton@kootru.com" },
 ]
 keywords = [
     "quantum chemistry",
@@ -66,7 +66,7 @@ Homepage = "https://github.com/kootru-repo/cumulant-residual-cert"
 Documentation = "https://cumulant-residual-cert.readthedocs.io"
 Issues = "https://github.com/kootru-repo/cumulant-residual-cert/issues"
 Reproducibility = "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
-Organization = "https://www.kootru.com"
+Organization = "https://labs.kootru.com"
 DOI = "https://doi.org/10.5281/zenodo.20129665"
 
 [tool.hatch.build.targets.wheel]
