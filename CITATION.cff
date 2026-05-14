@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+title: "cumulant-residual-cert: deterministic bias certificates for charge-neutral fermionic-word observables"
+message: "If you use this library, please cite the software (this CITATION.cff) and the related Zenodo deposit and manuscript below."
+type: software
+authors:
+  - family-names: Craton
+    given-names: Andrew
+    affiliation: "Kootru Labs (DBA of Kootru LLC)"
+    email: "acraton@kootru.com"
+    orcid: "https://orcid.org/0009-0001-2269-8599"
+    website: "https://www.kootru.com"
+repository-code: "https://github.com/kootru-repo/cumulant-residual-cert"
+url: "https://github.com/kootru-repo/cumulant-residual-cert"
+license: Apache-2.0
+version: "0.5.0"
+date-released: "2026-05-14"
+keywords:
+  - quantum-chemistry
+  - fermionic-shadows
+  - cumulant-truncation
+  - bias-certificate
+  - U(1)-symmetry
+  - reduced-density-matrix
+references:
+  - type: data
+    title: "charge-filtered-cumulant-residuals: reproducibility envelope"
+    authors:
+      - family-names: Craton
+        given-names: Andrew
+        affiliation: "Kootru Labs (DBA of Kootru LLC)"
+        orcid: "https://orcid.org/0009-0001-2269-8599"
+    doi: "10.5281/zenodo.20129665"
+    repository-code: "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
+    year: 2026
+  - type: article
+    title: "Charge-filtered cumulant residual bounds for charge-neutral fermionic-word observables on U(1)-invariant states"
+    authors:
+      - family-names: Craton
+        given-names: Andrew
+        affiliation: "Kootru Labs (DBA of Kootru LLC)"
+        orcid: "https://orcid.org/0009-0001-2269-8599"
+    year: 2026

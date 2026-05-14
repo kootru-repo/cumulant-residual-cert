@@ -12,6 +12,9 @@ license = { text = "Apache-2.0" }
 authors = [
     { name = "Andrew Craton", email = "acraton@kootru.com" },
 ]
+maintainers = [
+    { name = "Kootru Labs (DBA of Kootru LLC)", email = "acraton@kootru.com" },
+]
 keywords = [
     "quantum chemistry",
     "fermionic shadows",
@@ -63,6 +66,8 @@ Homepage = "https://github.com/kootru-repo/cumulant-residual-cert"
 Documentation = "https://cumulant-residual-cert.readthedocs.io"
 Issues = "https://github.com/kootru-repo/cumulant-residual-cert/issues"
 Reproducibility = "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
+Organization = "https://www.kootru.com"
+DOI = "https://doi.org/10.5281/zenodo.20129665"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cumulant_residual_cert"]

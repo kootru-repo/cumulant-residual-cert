@@ -22,7 +22,7 @@ Click the Colab badge that matches your state of mind. All notebooks run end-to-
 [qs]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb
 [cb-nb]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb
 
-> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals): claim-indexed audit notebooks, pytest suite with explicit assertions on the manuscript headlines, lightweight mutation sanity harness, SHA256-pinned deposited data, and Binder for one-click reproduction. The present library is the user-facing companion; its catalog constants are CI-checked against that repo's independent implementation on every push.
+> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals) (Zenodo DOI [10.5281/zenodo.20129665](https://doi.org/10.5281/zenodo.20129665)): claim-indexed audit notebooks, pytest suite with explicit assertions on the manuscript headlines, lightweight mutation sanity harness, SHA256-pinned deposited data, and a headless-CI notebook workflow that reruns every notebook end-to-end on every push. The present library is the user-facing companion; its catalog constants are CI-checked against that repo's independent implementation on every push.
 
 ### What you get from each notebook
 
@@ -151,6 +151,58 @@ the catalog name, the library version (auto-populated via
 downstream auditor or a journal supplement to identify exactly what
 produced the bound.
 
+## About
+
+Maintained by **Kootru Labs** (a DBA of Kootru LLC), [www.kootru.com](https://www.kootru.com).
+
+Author and Principal Researcher: **Andrew Craton** ([ORCID 0009-0001-2269-8599](https://orcid.org/0009-0001-2269-8599), [acraton@kootru.com](mailto:acraton@kootru.com)).
+
+The library is the user-facing companion to the reproducibility envelope at [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals), Zenodo DOI [10.5281/zenodo.20129665](https://doi.org/10.5281/zenodo.20129665). Constants computed here are continuously cross-checked against that repository's independent implementation in CI.
+
+## How to cite
+
+Please cite both the library and the underlying reproducibility deposit. A machine-readable [`CITATION.cff`](CITATION.cff) is provided; the BibTeX below is the equivalent.
+
+**Software (this library):**
+
+```bibtex
+@software{cumulant_residual_cert,
+  author       = {Craton, Andrew},
+  title        = {{cumulant-residual-cert}: deterministic bias certificates for
+                  charge-neutral fermionic-word observables},
+  organization = {Kootru Labs (DBA of Kootru LLC)},
+  url          = {https://github.com/kootru-repo/cumulant-residual-cert},
+  version      = {0.5.0},
+  year         = {2026}
+}
+```
+
+**Reproducibility deposit:**
+
+```bibtex
+@dataset{charge_filtered_cumulant_residuals,
+  author       = {Craton, Andrew},
+  title        = {{charge-filtered-cumulant-residuals}: reproducibility envelope},
+  organization = {Kootru Labs (DBA of Kootru LLC)},
+  doi          = {10.5281/zenodo.20129665},
+  url          = {https://doi.org/10.5281/zenodo.20129665},
+  year         = {2026}
+}
+```
+
+**Manuscript:**
+
+```bibtex
+@unpublished{craton_charge_filtered_cumulant_residuals_manuscript,
+  author       = {Craton, Andrew},
+  title        = {Charge-filtered cumulant residual bounds for charge-neutral
+                  fermionic-word observables on {$U(1)$}-invariant states},
+  organization = {Kootru Labs (DBA of Kootru LLC)},
+  year         = {2026},
+  note         = {Manuscript in preparation}
+}
+```
+
 ## License
 
-Apache 2.0.
+Apache 2.0 (see [`LICENSE`](LICENSE)). Copyright held by Kootru Labs (a DBA of Kootru LLC).
