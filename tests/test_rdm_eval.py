@@ -12,7 +12,6 @@ from itertools import product
 
 import numpy as np
 import pytest
-
 from cumulant_residual_cert import Catalog
 from cumulant_residual_cert._fermion import letter_op
 from cumulant_residual_cert._rdm_eval import (
@@ -115,7 +114,7 @@ def test_slater_determinant_gives_zero_catalog_cumulants():
         (1, 2, 3, 4),
         (1, 2, 3, 4),
     ]
-    for w, sites in zip(cat, sites_per_word):
+    for w, sites in zip(cat, sites_per_word, strict=False):
         kappa = evaluate_word_cumulant(w, sites, rdm1, rdm2, rdm3, rdm4)
         assert abs(kappa) < 1e-10, (w.name, kappa)
 
@@ -133,7 +132,7 @@ def test_random_product_state_gives_zero_catalog_cumulants():
     for idx in range(2 ** n):
         bits = [(idx >> (n - 1 - i)) & 1 for i in range(n)]
         prob = 1.0
-        for p_i, b in zip(occupation_probs, bits):
+        for p_i, b in zip(occupation_probs, bits, strict=False):
             prob *= p_i if b == 1 else (1 - p_i)
         weights[idx] = prob
     rho = np.diag(weights)
@@ -151,7 +150,7 @@ def test_random_product_state_gives_zero_catalog_cumulants():
         (1, 2, 3, 4),
         (1, 2, 3, 4),
     ]
-    for w, sites in zip(cat, sites_per_word):
+    for w, sites in zip(cat, sites_per_word, strict=False):
         kappa = evaluate_word_cumulant(w, sites, rdm1, rdm2, rdm3, rdm4)
         assert abs(kappa) < 1e-10, (w.name, kappa)
 
@@ -204,7 +203,7 @@ def test_correlated_state_rdm_cumulant_matches_dense():
         bits = [(idx >> (n - 1 - i)) & 1 for i in range(n)]
         sectors.setdefault(sum(bits), []).append(idx)
     sector_weights = rng.dirichlet(np.ones(len(sectors)))
-    for w_sec, (_N, basis_idxs) in zip(sector_weights, sorted(sectors.items())):
+    for w_sec, (_N, basis_idxs) in zip(sector_weights, sorted(sectors.items()), strict=False):
         k = len(basis_idxs)
         M = rng.standard_normal((k, k)) + 1j * rng.standard_normal((k, k))
         M = M @ M.conj().T
@@ -226,7 +225,7 @@ def test_correlated_state_rdm_cumulant_matches_dense():
         (1, 2, 3, 4),
         (1, 2, 3, 4),
     ]
-    for w, sites in zip(cat, sites_per_word):
+    for w, sites in zip(cat, sites_per_word, strict=False):
         kappa_rdm = evaluate_word_cumulant(w, sites, rdm1, rdm2, rdm3, rdm4)
         kappa_dense = _connected_cumulant_dense(rho, w.letters, sites, n)
         assert kappa_rdm == pytest.approx(kappa_dense, abs=1e-9, rel=1e-6), (

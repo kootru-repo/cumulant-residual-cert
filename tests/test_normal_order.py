@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from cumulant_residual_cert._normal_order import (
     NormalOrderedTerm,
     combine_terms,

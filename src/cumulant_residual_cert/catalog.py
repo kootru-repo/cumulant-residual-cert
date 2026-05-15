@@ -19,7 +19,7 @@ used for chemistry-catalog residual bounds.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 Letter = Literal["I", "n", "a", "a_dag"]
@@ -150,8 +150,5 @@ def word(letters: str | tuple[str, ...], name: str = "") -> FermionicWord:
     >>> word(("a_dag", "a", "n"), name="hopping")
     FermionicWord(letters=('a_dag', 'a', 'n'), name='hopping')
     """
-    if isinstance(letters, str):
-        letters_tuple = tuple(letters.split())
-    else:
-        letters_tuple = tuple(letters)
+    letters_tuple = tuple(letters.split()) if isinstance(letters, str) else tuple(letters)
     return FermionicWord(letters=letters_tuple, name=name)

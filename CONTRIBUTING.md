@@ -8,9 +8,14 @@ This is a small library with a deliberately narrow scope. Please read the
 ```bash
 git clone https://github.com/kootru-repo/cumulant-residual-cert
 cd cumulant-residual-cert
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
+uv sync --extra dev
+uv run pytest
+```
+
+If you need every adapter extra and the docs toolchain:
+
+```bash
+uv sync --extra dev --extra all --extra docs
 ```
 
 ## Code style
@@ -32,7 +37,7 @@ pytest
 
 When reporting a bug, please include:
 - The function signature you called and the inputs.
-- The version of `cumulant-residual-cert` (`pip show`).
+- The version of `cumulant-residual-cert` (`uv pip show cumulant-residual-cert`).
 - The version of any chemistry adapter (`pyscf`, `openfermion`, `qiskit-nature`).
 - A minimal reproducing example.
 

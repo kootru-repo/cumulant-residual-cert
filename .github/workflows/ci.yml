@@ -18,28 +18,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
+          enable-cache: true
 
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+      - name: Set up Python ${{ matrix.python-version }} via uv
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dev extras
+        run: uv sync --python ${{ matrix.python-version }} --extra dev
 
       - name: Lint
-        run: |
-          ruff check src tests
+        run: uv run ruff check src tests
 
       - name: Type check
-        run: |
-          pyright src tests
+        run: uv run pyright src tests
 
       - name: Test
-        run: |
-          pytest --cov=cumulant_residual_cert --cov-report=term-missing
+        run: uv run pytest --cov=cumulant_residual_cert --cov-report=term-missing
 
   adapters-and-docs:
     name: Adapter extras + docs build (Ubuntu, Python 3.12)
@@ -47,24 +44,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: "3.12"
-          cache: pip
+          enable-cache: true
+
+      - name: Set up Python 3.12 via uv
+        run: uv python install 3.12
 
       - name: Install with all extras and docs
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[all,dev,docs]"
+        run: uv sync --python 3.12 --extra all --extra dev --extra docs
 
       - name: Run adapter tests
-        run: |
-          pytest tests/test_adapters.py -v
+        run: uv run pytest tests/test_adapters.py -v
 
       - name: Build docs
-        run: |
-          mkdocs build --strict
+        run: uv run mkdocs build --strict
 
   golden-sync:
     name: Golden-sync against audit repo
@@ -89,18 +84,18 @@ jobs:
           path: _audit
           ref: ${{ steps.audit_pin.outputs.sha }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: "3.12"
-          cache: pip
+          enable-cache: true
+
+      - name: Set up Python 3.12 via uv
+        run: uv python install 3.12
 
       - name: Install
-        run: |
-          pip install -e ".[dev]"
+        run: uv sync --python 3.12 --extra dev
 
       - name: Run sync test
         env:
           AUDIT_REPO_PATH: ${{ github.workspace }}/_audit
-        run: |
-          pytest tests/test_golden_sync.py -v
+        run: uv run pytest tests/test_golden_sync.py -v

@@ -94,7 +94,7 @@ def word_majorana_decomposition(
         raise ValueError("letters and sites must have equal length")
 
     result: MajoranaDecomposition = {(): 1.0 + 0j}
-    for L, s in zip(letters_list, sites_list):
+    for L, s in zip(letters_list, sites_list, strict=False):
         letter_terms = letter_majorana_decomposition(L, s)
         new_result: MajoranaDecomposition = {}
         for prev_idx, prev_coeff in result.items():

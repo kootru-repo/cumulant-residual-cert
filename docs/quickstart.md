@@ -2,20 +2,26 @@
 
 ## Install
 
-The package is installed directly from the GitHub repository:
+The package is installed directly from the GitHub repository via [uv](https://docs.astral.sh/uv/):
 
 ```bash
 GIT=git+https://github.com/kootru-repo/cumulant-residual-cert.git
-pip install "cumulant_residual_cert@${GIT}"
+
+# Add to a uv-managed project
+uv add "cumulant_residual_cert@${GIT}"
+
+# Or install into the current venv (one-off scripts, notebooks)
+uv pip install "cumulant_residual_cert@${GIT}"
 ```
 
-With one or more chemistry-stack adapters:
+With one or more chemistry-stack adapters (same pattern, use whichever
+form fits your workflow):
 
 ```bash
-pip install "cumulant_residual_cert[pyscf]@${GIT}"
-pip install "cumulant_residual_cert[openfermion]@${GIT}"
-pip install "cumulant_residual_cert[qiskit-nature]@${GIT}"
-pip install "cumulant_residual_cert[all]@${GIT}"
+uv add "cumulant_residual_cert[pyscf]@${GIT}"
+uv add "cumulant_residual_cert[openfermion]@${GIT}"
+uv add "cumulant_residual_cert[qiskit-nature]@${GIT}"
+uv add "cumulant_residual_cert[all]@${GIT}"
 ```
 
 Pin to a release by appending `@v0.5.0` (or another tag) to the git URL.

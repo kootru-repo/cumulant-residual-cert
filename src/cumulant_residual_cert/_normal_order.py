@@ -79,7 +79,7 @@ def word_primitives(letters: Iterable[str], sites: Iterable[int]) -> list[Primit
     sites = list(sites)
     if len(letters) != len(sites):
         raise ValueError("letters and sites must have equal length")
-    for L, s in zip(letters, sites):
+    for L, s in zip(letters, sites, strict=False):
         out.extend(letter_primitives(L, s))
     return out
 
@@ -141,7 +141,7 @@ def _normal_order_with_sign(primitives: list[Primitive], sign: int) -> list[Norm
                 contracted = head + tail
                 results.extend(_normal_order_with_sign(contracted, sign))
             # Swapped term with sign flip.
-            swapped = head + [("+", site_right), ("-", site_left)] + tail
+            swapped = [*head, ("+", site_right), ("-", site_left), *tail]
             results.extend(_normal_order_with_sign(swapped, -sign))
             return results
     # No inversions: all creations are to the left of all annihilations.

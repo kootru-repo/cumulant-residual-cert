@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from cumulant_residual_cert import Catalog, delta_ucb
 from cumulant_residual_cert.diagnostic import collect_shadows
 
@@ -260,8 +259,9 @@ def test_partition_radius_contribution_validates_lengths():
 
 def test_subword_moments_pipeline_zero_input_gives_zero_ucb():
     """All-zero per-subword moments and radii give a zero UCB."""
-    from cumulant_residual_cert import delta_ucb_from_subword_moments
     from itertools import combinations as _combinations
+
+    from cumulant_residual_cert import delta_ucb_from_subword_moments
 
     cat = Catalog.chemistry_r4()
     per_subword: dict = {}
@@ -285,7 +285,7 @@ def test_subword_moments_pipeline_matches_delta_ucb_on_pauli_shadows():
     Both paths exercise the protocol-agnostic Mobius assembly via the same
     private helper, so any non-trivial state should give identical UCBs.
     """
-    from cumulant_residual_cert import delta_ucb, delta_ucb_from_subword_moments
+    from cumulant_residual_cert import delta_ucb
 
     n = 4
     rho = _two_particle_basis_state(n)
@@ -313,8 +313,9 @@ def test_subword_moments_pipeline_matches_delta_ucb_on_pauli_shadows():
 
 
 def test_subword_moments_pipeline_rejects_missing_word():
-    from cumulant_residual_cert import delta_ucb_from_subword_moments
     from itertools import combinations as _combinations
+
+    from cumulant_residual_cert import delta_ucb_from_subword_moments
 
     cat = Catalog.chemistry_r4()
     # Fill in every word EXCEPT the last one to specifically trigger the
@@ -336,8 +337,9 @@ def test_subword_moments_pipeline_rejects_missing_word():
 
 
 def test_subword_moments_pipeline_rejects_missing_subword_block():
-    from cumulant_residual_cert import delta_ucb_from_subword_moments
     from itertools import combinations as _combinations
+
+    from cumulant_residual_cert import delta_ucb_from_subword_moments
 
     cat = Catalog.chemistry_r4()
     per_subword: dict = {}
@@ -358,8 +360,9 @@ def test_subword_moments_pipeline_rejects_missing_subword_block():
 
 
 def test_subword_moments_pipeline_rejects_negative_radius():
-    from cumulant_residual_cert import delta_ucb_from_subword_moments
     from itertools import combinations as _combinations
+
+    from cumulant_residual_cert import delta_ucb_from_subword_moments
 
     cat = Catalog.chemistry_r4()
     per_subword: dict = {}

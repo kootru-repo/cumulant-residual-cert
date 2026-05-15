@@ -14,13 +14,11 @@ each release. This test verifies:
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 from pathlib import Path
 
 import pytest
-
 from cumulant_residual_cert import Catalog, constants
 
 
@@ -100,7 +98,11 @@ def test_audit_repo_cross_check():
     try:
         from connected_layer_sector.constants import (  # type: ignore[import-not-found]
             B_charge_r as audit_B_charge_r,
+        )
+        from connected_layer_sector.constants import (
             B_r_const as audit_B_r,
+        )
+        from connected_layer_sector.constants import (
             Bhat_charge_r as audit_Bhat_charge_r,
         )
     finally:

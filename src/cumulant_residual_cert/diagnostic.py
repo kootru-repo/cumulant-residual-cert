@@ -177,7 +177,7 @@ class UCBResult:
 
 
 def _ucb_from_subword_moments(
-    per_subword: "dict[str, dict[tuple[int, ...], tuple[complex, float]]]",
+    per_subword: dict[str, dict[tuple[int, ...], tuple[complex, float]]],
     catalog: Catalog,
     confidence: float,
     n_protocol_terms: int,
@@ -235,7 +235,7 @@ def _ucb_from_subword_moments(
 
 
 def delta_ucb_from_subword_moments(
-    per_subword: "dict[str, dict[tuple[int, ...], tuple[complex, float]]]",
+    per_subword: dict[str, dict[tuple[int, ...], tuple[complex, float]]],
     catalog: Catalog,
     *,
     confidence: float = 0.95,
@@ -371,7 +371,7 @@ def delta_ucb(
 
     # Validate sites and shadow shots up front so a bad index produces a
     # readable error rather than failing deep inside the Mobius transform.
-    for w, sites in zip(catalog, sites_per_word):
+    for w, sites in zip(catalog, sites_per_word, strict=False):
         if len(sites) != w.length:
             raise ValueError(
                 f"word {w.name!r} has length {w.length} but {len(sites)} sites given"
@@ -402,7 +402,7 @@ def delta_ucb(
     # 1. Build subword Pauli expansions for every catalog word.
     word_sub_paulis: dict[str, dict[tuple[int, ...], dict]] = {}
     all_paulis: set[tuple[str, ...]] = set()
-    for w, sites in zip(catalog, sites_per_word):
+    for w, sites in zip(catalog, sites_per_word, strict=False):
         sites_t = tuple(sites)
         m = w.length
         sub_exp: dict[tuple[int, ...], dict] = {}
@@ -448,7 +448,7 @@ def delta_ucb(
 
 
 def delta_ucb_from_majorana_moments(
-    majorana_moments: "dict[tuple[int, ...], tuple[complex, float]]",
+    majorana_moments: dict[tuple[int, ...], tuple[complex, float]],
     catalog: Catalog,
     sites_per_word: Sequence[Sequence[int]],
     *,
@@ -521,7 +521,7 @@ def delta_ucb_from_majorana_moments(
         return majorana_moments[idx_tuple]
 
     per_subword: dict[str, dict[tuple[int, ...], tuple[complex, float]]] = {}
-    for w, sites in zip(catalog, sites_per_word):
+    for w, sites in zip(catalog, sites_per_word, strict=False):
         sites_t = tuple(int(s) for s in sites)
         if len(sites_t) != w.length:
             raise ValueError(
@@ -572,7 +572,7 @@ class UCBSplitResult:
     n_holdout : int
     """
 
-    ucb: "UCBResult"
+    ucb: UCBResult
     diagnostic_indices: tuple[int, ...]
     holdout_indices: tuple[int, ...]
     n_diagnostic: int

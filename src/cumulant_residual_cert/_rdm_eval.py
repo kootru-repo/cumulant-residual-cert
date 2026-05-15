@@ -29,7 +29,6 @@ from math import factorial
 from typing import TYPE_CHECKING
 
 from ._normal_order import (
-    NormalOrderedTerm,
     combine_terms,
     normal_order,
     word_primitives,
@@ -44,10 +43,10 @@ if TYPE_CHECKING:
 def evaluate_normal_ordered_term(
     creations: tuple[int, ...],
     annihilations: tuple[int, ...],
-    rdm1: "np.ndarray",
-    rdm2: "np.ndarray | None" = None,
-    rdm3: "np.ndarray | None" = None,
-    rdm4: "np.ndarray | None" = None,
+    rdm1: np.ndarray,
+    rdm2: np.ndarray | None = None,
+    rdm3: np.ndarray | None = None,
+    rdm4: np.ndarray | None = None,
 ) -> complex:
     """Look up a normal-ordered fermion-operator expectation in user RDMs.
 
@@ -96,10 +95,10 @@ def evaluate_normal_ordered_term(
 def evaluate_subword_moment(
     sub_letters: tuple[str, ...],
     sub_sites: tuple[int, ...],
-    rdm1: "np.ndarray",
-    rdm2: "np.ndarray | None" = None,
-    rdm3: "np.ndarray | None" = None,
-    rdm4: "np.ndarray | None" = None,
+    rdm1: np.ndarray,
+    rdm2: np.ndarray | None = None,
+    rdm3: np.ndarray | None = None,
+    rdm4: np.ndarray | None = None,
 ) -> complex:
     """Compute $\\langle A_B(W) \\rangle$ for a subword by normal-ordering."""
     prims = word_primitives(sub_letters, sub_sites)
@@ -119,10 +118,10 @@ def evaluate_subword_moment(
 def evaluate_word_cumulant(
     word: FermionicWord,
     sites: tuple[int, ...],
-    rdm1: "np.ndarray",
-    rdm2: "np.ndarray | None" = None,
-    rdm3: "np.ndarray | None" = None,
-    rdm4: "np.ndarray | None" = None,
+    rdm1: np.ndarray,
+    rdm2: np.ndarray | None = None,
+    rdm3: np.ndarray | None = None,
+    rdm4: np.ndarray | None = None,
 ) -> complex:
     """Connected cumulant $\\kappa_W(\\rho)$ from RDMs via the Möbius formula."""
     if len(sites) != word.length:

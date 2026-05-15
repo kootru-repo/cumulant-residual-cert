@@ -21,7 +21,7 @@ Two routes ship currently:
 
 Install with::
 
-    pip install "cumulant-residual-cert[pyscf]"
+    uv add "cumulant-residual-cert[pyscf]"
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 _PYSCF_MISSING_MSG = (
     "PySCF is required for cumulant_residual_cert.adapters.pyscf. "
-    "Install with: pip install 'cumulant-residual-cert[pyscf]'"
+    "Install with: uv add 'cumulant-residual-cert[pyscf]'"
 )
 
 
@@ -140,14 +140,14 @@ def from_mean_field(
 
 
 def from_rdms(
-    rdm1: "np.ndarray",
+    rdm1: np.ndarray,
     catalog: Catalog,
     *,
-    sites_per_word: "Any",
+    sites_per_word: Any,
     level: Level = "block_refined",
-    rdm2: "np.ndarray | None" = None,
-    rdm3: "np.ndarray | None" = None,
-    rdm4: "np.ndarray | None" = None,
+    rdm2: np.ndarray | None = None,
+    rdm3: np.ndarray | None = None,
+    rdm4: np.ndarray | None = None,
 ) -> AdapterEstimate:
     """Certify the truncation bias from supplied spin-orbital RDMs.
 
@@ -236,7 +236,7 @@ def from_rdms(
                 f"got shape {rdm_k.shape}"
             )
 
-    for w, sites in zip(catalog, sites_per_word):
+    for w, sites in zip(catalog, sites_per_word, strict=False):
         if len(sites) != w.length:
             raise ValueError(
                 f"word {w.name!r} has length {w.length} but {len(sites)} "
@@ -254,7 +254,7 @@ def from_rdms(
                 )
 
     cumulants: dict[str, complex] = {}
-    for w, sites in zip(catalog, sites_per_word):
+    for w, sites in zip(catalog, sites_per_word, strict=False):
         sites_t = tuple(int(s) for s in sites)
         cumulants[w.name] = evaluate_word_cumulant(
             w, sites_t, rdm1, rdm2, rdm3, rdm4,

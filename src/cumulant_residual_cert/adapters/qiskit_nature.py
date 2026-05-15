@@ -17,7 +17,7 @@ Two routes are supported currently:
 
 Install with::
 
-    pip install "cumulant-residual-cert[qiskit-nature]"
+    uv add "cumulant-residual-cert[qiskit-nature]"
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 _QISKIT_NATURE_MISSING_MSG = (
     "qiskit-nature is required for cumulant_residual_cert.adapters.qiskit_nature. "
-    "Install with: pip install 'cumulant-residual-cert[qiskit-nature]'"
+    "Install with: uv add 'cumulant-residual-cert[qiskit-nature]'"
 )
 
 
@@ -55,7 +55,7 @@ def _require_qiskit_nature():
 def word_to_fermionic_op(
     word: FermionicWord,
     sites: Sequence[int],
-) -> "FermionicOp":
+) -> FermionicOp:
     """Convert a :class:`FermionicWord` to a Qiskit-Nature ``FermionicOp``.
 
     Site indices are 1-based on input and converted to 0-based for Qiskit-Nature.
@@ -74,7 +74,7 @@ def word_to_fermionic_op(
         raise ValueError(f"word {word.name!r} has duplicate sites: {sites}")
 
     factors: list[str] = []
-    for L, s in zip(word.letters, sites):
+    for L, s in zip(word.letters, sites, strict=False):
         site0 = s - 1
         if L == "I":
             continue

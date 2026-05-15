@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from cumulant_residual_cert import Catalog, FermionicWord, word
 from cumulant_residual_cert.catalog import LETTER_CHARGE
 

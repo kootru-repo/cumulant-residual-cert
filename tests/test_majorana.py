@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import math
-
 import pytest
-
 from cumulant_residual_cert._majorana import (
     _canonicalize_majorana_product,
     letter_majorana_decomposition,
     multiply_majorana_terms,
     word_majorana_decomposition,
 )
-
 
 # ----- letter-level decomposition -----
 
@@ -198,7 +194,6 @@ def test_word_decomposition_matches_dense_operator():
     The result must equal the dense letter-product operator from _fermion.
     """
     import numpy as np
-
     from cumulant_residual_cert._fermion import I2, _kron, letter_op
 
     n = 4
@@ -238,7 +233,7 @@ def test_word_decomposition_matches_dense_operator():
         reconstructed += coeff * majorana_product_dense(indices)
     # Direct word operator.
     direct = letter_op(letters[0], sites[0], n)
-    for L, s in zip(letters[1:], sites[1:]):
+    for L, s in zip(letters[1:], sites[1:], strict=False):
         direct = direct @ letter_op(L, s, n)
     assert np.allclose(reconstructed, direct, atol=1e-10), (
         f"max diff: {np.max(np.abs(reconstructed - direct))}"

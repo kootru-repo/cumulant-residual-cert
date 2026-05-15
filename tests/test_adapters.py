@@ -8,9 +8,7 @@ chemistry libraries, the other two tests should not block the run.
 from __future__ import annotations
 
 import pytest
-
 from cumulant_residual_cert import Catalog
-
 
 # ---------------- PySCF ----------------------------------------------------
 
@@ -18,9 +16,8 @@ from cumulant_residual_cert import Catalog
 def test_pyscf_bernoulli_class_returns_zero_delta():
     """Canonical HF + explicit user assertion -> Bernoulli class -> Delta = 0 exactly."""
     pytest.importorskip("pyscf", reason="PySCF not installed")
-    from pyscf import gto, scf
-
     from cumulant_residual_cert.adapters.pyscf import from_mean_field
+    from pyscf import gto, scf
 
     mol = gto.M(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g", verbose=0)
     mf = scf.RHF(mol).run(conv_tol=1e-10)
@@ -36,9 +33,8 @@ def test_pyscf_bernoulli_class_returns_zero_delta():
 
 def test_pyscf_non_canonical_basis_raises_not_implemented():
     pytest.importorskip("pyscf", reason="PySCF not installed")
-    from pyscf import gto, scf
-
     from cumulant_residual_cert.adapters.pyscf import from_mean_field
+    from pyscf import gto, scf
 
     mol = gto.M(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g", verbose=0)
     mf = scf.RHF(mol).run(conv_tol=1e-10)
@@ -50,9 +46,8 @@ def test_pyscf_non_canonical_basis_raises_not_implemented():
 
 def test_pyscf_requires_explicit_bernoulli_assertion():
     pytest.importorskip("pyscf", reason="PySCF not installed")
-    from pyscf import gto, scf
-
     from cumulant_residual_cert.adapters.pyscf import from_mean_field
+    from pyscf import gto, scf
 
     mol = gto.M(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g", verbose=0)
     mf = scf.RHF(mol).run(conv_tol=1e-10)
@@ -78,11 +73,11 @@ def test_pyscf_unconverged_meanfield_raises():
 def test_pyscf_from_rdms_bernoulli_class_yields_zero_delta():
     """A Slater determinant's RDMs feed straight through from_rdms() to Delta = 0."""
     pytest.importorskip("pyscf", reason="PySCF not installed")
-    import numpy as np
-
-    from cumulant_residual_cert.adapters.pyscf import from_rdms
-    from cumulant_residual_cert._fermion import letter_op
     from itertools import product as iproduct
+
+    import numpy as np
+    from cumulant_residual_cert._fermion import letter_op
+    from cumulant_residual_cert.adapters.pyscf import from_rdms
 
     n = 4
 
@@ -135,7 +130,6 @@ def test_pyscf_from_rdms_bernoulli_class_yields_zero_delta():
 def test_pyscf_from_rdms_validates_site_count():
     pytest.importorskip("pyscf", reason="PySCF not installed")
     import numpy as np
-
     from cumulant_residual_cert.adapters.pyscf import from_rdms
 
     cat = Catalog.chemistry_r4()
@@ -153,10 +147,9 @@ def test_pyscf_from_rdms_validates_site_count():
 def test_openfermion_word_to_fermion_operator_terms():
     """The produced FermionOperator has exactly the expected normal-ordered string."""
     pytest.importorskip("openfermion", reason="OpenFermion not installed")
-    from openfermion import FermionOperator
-
     from cumulant_residual_cert.adapters.openfermion import word_to_fermion_operator
     from cumulant_residual_cert.catalog import FermionicWord
+    from openfermion import FermionOperator
 
     # n_1 n_2 n_3 in 1-based site indexing -> n_0 n_1 n_2 in 0-based.
     w = FermionicWord(("n", "n", "n"), name="n n n")
@@ -167,10 +160,9 @@ def test_openfermion_word_to_fermion_operator_terms():
 
 def test_openfermion_word_to_fermion_operator_a_dag_a_n():
     pytest.importorskip("openfermion", reason="OpenFermion not installed")
-    from openfermion import FermionOperator
-
     from cumulant_residual_cert.adapters.openfermion import word_to_fermion_operator
     from cumulant_residual_cert.catalog import FermionicWord
+    from openfermion import FermionOperator
 
     # a_dag_1 a_2 n_3 -> a_dag_0 a_1 (a_dag_2 a_2).
     w = FermionicWord(("a_dag", "a", "n"), name="ad a n")
@@ -229,7 +221,6 @@ def test_qiskit_nature_word_to_fermionic_op_exact_label():
     w = FermionicWord(("n", "n", "n"), name="n n n")
     op = word_to_fermionic_op(w, sites=(1, 2, 3))
     # n_i is +_i -_i, so n n n -> "+_0 -_0 +_1 -_1 +_2 -_2".
-    expected_terms = dict(op.terms())
     expected_label = "+_0 -_0 +_1 -_1 +_2 -_2"
     assert expected_label in {label for label, _ in op.terms()}, dict(op.terms())
     # And coefficient is 1.0 on that label.

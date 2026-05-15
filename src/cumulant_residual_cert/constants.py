@@ -25,7 +25,7 @@ class ConstantsTable:
 
     r: int
     universal: int
-    per_word: dict[str, "WordConstants"]
+    per_word: dict[str, WordConstants]
 
 
 @dataclass(frozen=True)

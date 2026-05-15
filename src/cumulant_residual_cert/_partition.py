@@ -21,7 +21,7 @@ library, so the golden constants table can be regenerated in isolation.
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from functools import lru_cache
+from functools import cache
 from math import factorial
 
 
@@ -49,7 +49,7 @@ def partitions_of_m(m: int) -> list[list[list[int]]]:
     return list(set_partitions(list(range(1, m + 1))))
 
 
-@lru_cache(maxsize=None)
+@cache
 def M_r(r: int) -> int:
     """Mobius-bound constant $M_r = \\max_m \\sum_{\\pi \\in \\Pi_m} (|\\pi| - 1)!$."""
     if r < 1:
@@ -66,13 +66,10 @@ def _is_size_gt_2_partition(pi: list[list[int]]) -> bool:
 
 
 def _is_blockwise_neutral(pi: list[list[int]], charges: Sequence[int]) -> bool:
-    for block in pi:
-        if sum(charges[i - 1] for i in block) != 0:
-            return False
-    return True
+    return all(sum(charges[i - 1] for i in block) == 0 for block in pi)
 
 
-@lru_cache(maxsize=None)
+@cache
 def B_r(r: int) -> int:
     """Universal partition-lattice constant $B_r$ for residual bounds of order $r$."""
     if r < 3:

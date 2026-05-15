@@ -11,5 +11,5 @@ the submodule you need:
 
 If the relevant chemistry stack is not installed, importing the submodule
 raises ``ImportError`` with a clear pointer to the matching extras install
-(``pip install cumulant-residual-cert[pyscf]`` etc.).
+(``uv add 'cumulant-residual-cert[pyscf]'`` etc.).
 """

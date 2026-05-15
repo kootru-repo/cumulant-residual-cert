@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from cumulant_residual_cert import Catalog, constants
 from cumulant_residual_cert._partition import (
     B_charge_r,
@@ -40,8 +39,10 @@ def test_M_r_matches_recomputation_from_definition():
 
 
 def test_M_r_monotone_nondecreasing():
+    from itertools import pairwise
+
     values = [M_r(r) for r in range(1, 7)]
-    for a, b in zip(values, values[1:]):
+    for a, b in pairwise(values):
         assert a <= b, values
 
 

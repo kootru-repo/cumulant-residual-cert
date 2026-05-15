@@ -14,7 +14,7 @@ states (typically $n \\le 8$); shadow-based estimation does not require it.
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 
 import numpy as np
 
@@ -39,7 +39,7 @@ def _kron(mats: list[np.ndarray]) -> np.ndarray:
     return out
 
 
-@lru_cache(maxsize=None)
+@cache
 def letter_op(letter: str, site: int, n: int) -> np.ndarray:
     """Single-letter operator on site ``site`` (1-based) in an ``n``-site space."""
     if letter == "I":
@@ -63,7 +63,7 @@ def word_op(letters: tuple[str, ...], sites: tuple[int, ...], n: int) -> np.ndar
     if len(letters) != len(sites):
         raise ValueError("letters and sites must have the same length")
     out = letter_op(letters[0], sites[0], n)
-    for L, s in zip(letters[1:], sites[1:]):
+    for L, s in zip(letters[1:], sites[1:], strict=False):
         out = out @ letter_op(L, s, n)
     return out
 

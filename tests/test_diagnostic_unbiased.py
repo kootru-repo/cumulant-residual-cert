@@ -8,8 +8,10 @@ estimator concentrates well within 5%.
 from __future__ import annotations
 
 import numpy as np
-
-from cumulant_residual_cert.diagnostic import _one_shot_estimator, collect_shadows  # private/testing helpers
+from cumulant_residual_cert.diagnostic import (  # private/testing helpers
+    _one_shot_estimator,
+    collect_shadows,
+)
 
 
 def test_one_shot_estimator_unbiased_for_single_Z_on_vacuum():

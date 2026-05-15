@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 
 import pytest
-
 from cumulant_residual_cert import Catalog, certify
 
 
@@ -136,9 +135,8 @@ def test_certified_bound_round_trips_through_asdict_and_json():
 def test_pyscf_from_mean_field_records_closed_form_bernoulli_provenance():
     """The PySCF Bernoulli helper labels its certificate honestly."""
     pytest.importorskip("pyscf", reason="PySCF not installed")
-    from pyscf import gto, scf
-
     from cumulant_residual_cert.adapters.pyscf import from_mean_field
+    from pyscf import gto, scf
 
     mol = gto.M(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g", verbose=0)
     mf = scf.RHF(mol).run(conv_tol=1e-10)

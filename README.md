@@ -36,19 +36,33 @@ Click the Colab badge that matches your state of mind. All notebooks run end-to-
 
 - **[`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb)** — nine direct recipes: HF baseline (end-to-end PySCF on H₂ STO-3G), post-HF from RDMs, random-Pauli shadows, matchgate shadows, custom catalog, JSON persistence, go/no-go decision rule, level selection, OpenFermion / Qiskit-Nature operator conversion. *For users who know what they want and need a copy-paste solution.*
 
+## Requirements
+
+- Python `>=3.10` (CI runs 3.10, 3.11, 3.12 on Linux + macOS).
+- [uv](https://docs.astral.sh/uv/) (one-line install: `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux/macOS; `irm https://astral.sh/uv/install.ps1 | iex` on Windows).
+- Optional chemistry adapters (PySCF, OpenFermion, Qiskit Nature) are off by default; opt in via the extras matrix below.
+
+Core dep is `numpy >= 1.24`. Adapter and dev extras live in [`pyproject.toml`](pyproject.toml); the locked, durable resolution is in [`uv.lock`](uv.lock).
+
 ## Install
 
 This package is distributed via this GitHub repository; no PyPI publication is
-required. Install directly from the repo with `pip`:
+required. Install directly from the repo:
 
 ```bash
 GIT=git+https://github.com/kootru-repo/cumulant-residual-cert.git
-pip install "cumulant_residual_cert@${GIT}"
-# with chemistry-stack adapters
-pip install "cumulant_residual_cert[pyscf]@${GIT}"
-pip install "cumulant_residual_cert[openfermion]@${GIT}"
-pip install "cumulant_residual_cert[qiskit-nature]@${GIT}"
-pip install "cumulant_residual_cert[all]@${GIT}"
+
+# Add to a uv-managed project (recommended for downstream users)
+uv add "cumulant_residual_cert@${GIT}"
+
+# Or install into the current venv (one-off scripts, notebooks)
+uv pip install "cumulant_residual_cert@${GIT}"
+
+# With chemistry-stack adapters (same pattern; choose what you need)
+uv add "cumulant_residual_cert[pyscf]@${GIT}"
+uv add "cumulant_residual_cert[openfermion]@${GIT}"
+uv add "cumulant_residual_cert[qiskit-nature]@${GIT}"
+uv add "cumulant_residual_cert[all]@${GIT}"
 ```
 
 Pin to a specific release by appending `@v0.5.0` (or another tag) to the

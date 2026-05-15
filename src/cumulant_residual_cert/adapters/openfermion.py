@@ -21,7 +21,7 @@ Currently shipped:
 
 Install with::
 
-    pip install "cumulant-residual-cert[openfermion]"
+    uv add "cumulant-residual-cert[openfermion]"
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 _OPENFERMION_MISSING_MSG = (
     "OpenFermion is required for cumulant_residual_cert.adapters.openfermion. "
-    "Install with: pip install 'cumulant-residual-cert[openfermion]'"
+    "Install with: uv add 'cumulant-residual-cert[openfermion]'"
 )
 
 
@@ -57,7 +57,7 @@ def _require_openfermion():
 def word_to_fermion_operator(
     word: FermionicWord,
     sites: Sequence[int],
-) -> "FermionOperator":
+) -> FermionOperator:
     """Convert a :class:`FermionicWord` with site assignments to an OpenFermion ``FermionOperator``.
 
     OpenFermion uses 0-based site indices; we accept 1-based as elsewhere in
@@ -89,7 +89,7 @@ def word_to_fermion_operator(
         raise ValueError(f"word {word.name!r} has duplicate sites: {sites}")
 
     op = FermionOperator("")  # identity
-    for L, s in zip(word.letters, sites):
+    for L, s in zip(word.letters, sites, strict=False):
         site0 = s - 1
         if L == "I":
             continue
@@ -107,7 +107,7 @@ def word_to_fermion_operator(
 def catalog_to_fermion_operators(
     catalog: Catalog,
     sites_per_word: Sequence[Sequence[int]],
-) -> dict[str, "FermionOperator"]:
+) -> dict[str, FermionOperator]:
     """Convert every word in ``catalog`` into an ``OpenFermion`` operator."""
     if len(sites_per_word) != len(catalog):
         raise ValueError(
@@ -115,12 +115,12 @@ def catalog_to_fermion_operators(
         )
     return {
         w.name: word_to_fermion_operator(w, sites)
-        for w, sites in zip(catalog, sites_per_word)
+        for w, sites in zip(catalog, sites_per_word, strict=False)
     }
 
 
 def delta_ucb_from_matchgate_shadows(
-    majorana_moments: "dict[tuple[int, ...], tuple[complex, float]]",
+    majorana_moments: dict[tuple[int, ...], tuple[complex, float]],
     catalog: Catalog,
     sites_per_word: Sequence[Sequence[int]],
     *,
