@@ -178,7 +178,7 @@ produced the bound.
 
 Maintained by **Kootru Labs**, Burlington, USA. Website: [labs.kootru.com](https://labs.kootru.com).
 
-Author and Principal Researcher: **Andrew Craton** ([ORCID 0009-0001-2269-8599](https://orcid.org/0009-0001-2269-8599), [acraton@kootru.com](mailto:acraton@kootru.com)).
+Author: **Andrew Craton** ([ORCID 0009-0001-2269-8599](https://orcid.org/0009-0001-2269-8599), [acraton@kootru.com](mailto:acraton@kootru.com)).
 
 The library is the user-facing companion to the reproducibility envelope at [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals), Zenodo concept DOI [10.5281/zenodo.20129664](https://doi.org/10.5281/zenodo.20129664) (auto-tracks the latest version). Constants computed here are continuously cross-checked against that repository's independent implementation in CI.
 
