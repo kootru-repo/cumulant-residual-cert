@@ -22,7 +22,7 @@ Click the Colab badge that matches your state of mind. All notebooks run end-to-
 [qs]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb
 [cb-nb]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb
 
-> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals) (Zenodo DOI [10.5281/zenodo.20129665](https://doi.org/10.5281/zenodo.20129665)): claim-indexed audit notebooks, pytest suite with explicit assertions on the manuscript headlines, lightweight mutation sanity harness, SHA256-pinned deposited data, and a headless-CI notebook workflow that reruns every notebook end-to-end on every push. The present library is the user-facing companion; its catalog constants are CI-checked against that repo's independent implementation on every push.
+> *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals) (Zenodo concept DOI [10.5281/zenodo.20129664](https://doi.org/10.5281/zenodo.20129664), auto-tracks the latest version): claim-indexed audit notebooks, pytest suite with explicit assertions on the manuscript headlines, lightweight mutation sanity harness, SHA256-pinned deposited data, and a headless-CI notebook workflow that reruns every notebook end-to-end on every push. The present library is the user-facing companion; its catalog constants are CI-checked against that repo's independent implementation on every push.
 
 ### What you get from each notebook
 
@@ -171,7 +171,7 @@ Maintained by **Kootru Labs**, Burlington, USA. Website: [labs.kootru.com](https
 
 Author and Principal Researcher: **Andrew Craton** ([ORCID 0009-0001-2269-8599](https://orcid.org/0009-0001-2269-8599), [acraton@kootru.com](mailto:acraton@kootru.com)).
 
-The library is the user-facing companion to the reproducibility envelope at [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals), Zenodo DOI [10.5281/zenodo.20129665](https://doi.org/10.5281/zenodo.20129665). Constants computed here are continuously cross-checked against that repository's independent implementation in CI.
+The library is the user-facing companion to the reproducibility envelope at [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals), Zenodo concept DOI [10.5281/zenodo.20129664](https://doi.org/10.5281/zenodo.20129664) (auto-tracks the latest version). Constants computed here are continuously cross-checked against that repository's independent implementation in CI.
 
 ## How to cite
 
