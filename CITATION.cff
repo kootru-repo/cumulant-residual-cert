@@ -14,7 +14,7 @@ authors:
 repository-code: "https://github.com/kootru-repo/cumulant-residual-cert"
 url: "https://github.com/kootru-repo/cumulant-residual-cert"
 license: Apache-2.0
-version: "0.5.2"
+version: "0.5.3"
 date-released: "2026-05-15"
 keywords:
   - quantum-chemistry
