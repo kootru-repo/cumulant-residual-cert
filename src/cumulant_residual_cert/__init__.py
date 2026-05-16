@@ -38,4 +38,8 @@ __all__ = [
     "word",
 ]
 
-__version__ = "0.5.0"
+try:
+    from importlib.metadata import version as _pkg_version
+    __version__ = _pkg_version("cumulant-residual-cert")
+except Exception:  # pragma: no cover -- editable / source-tree fallback
+    __version__ = "0.0.0+unknown"
