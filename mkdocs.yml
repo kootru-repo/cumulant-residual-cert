@@ -1,6 +1,6 @@
 site_name: cumulant-residual-cert
 site_description: Deterministic bias certificates for second-order cumulant truncation on U(1)-invariant fermionic states.
-site_url: https://cumulant-residual-cert.readthedocs.io
+site_url: https://kootru-repo.github.io/cumulant-residual-cert/
 repo_url: https://github.com/kootru-repo/cumulant-residual-cert
 repo_name: kootru-repo/cumulant-residual-cert
 edit_uri: edit/main/docs/
@@ -45,4 +45,5 @@ nav:
   - Constants table: constants_table.md
   - JW range caveat: jw_range_caveat.md
   - API reference: api.md
+  - Performance: performance.md
   - Reproducibility: reproducibility_link.md

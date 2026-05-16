@@ -40,6 +40,12 @@ Or open any notebook directly in Colab via the badge at the top of each. Each no
 
 - **[`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb)** — nine direct recipes: HF baseline (end-to-end PySCF on H₂ STO-3G), post-HF from RDMs, random-Pauli shadows, matchgate shadows, custom catalog, JSON persistence, go/no-go decision rule, level selection, OpenFermion / Qiskit-Nature operator conversion. *For users who know what they want and need a copy-paste solution.*
 
+## Documentation
+
+- **Rendered API reference + guides:** <https://kootru-repo.github.io/cumulant-residual-cert/>. Auto-generated from docstrings by `mkdocstrings`; rebuilt on every push to `main`. Includes the constants tables, the JW range caveat, the quickstart walkthrough, and the full API surface.
+- **Performance characteristics + scaling laws:** [`docs/performance.md`](docs/performance.md). Wall-clock medians for every public entry point at a range of `n_qubits` and shot counts, plus the asymptotic story (`delta_ucb` random-Pauli scales as $3^n$; the matchgate path is $n$-independent).
+- **Reproduce the benchmarks yourself:** `uv run python tools/benchmark.py` (add `--json` for machine-readable output).
+
 ## Requirements
 
 - Python `>=3.10` (CI runs 3.10, 3.11, 3.12 on Linux + macOS).

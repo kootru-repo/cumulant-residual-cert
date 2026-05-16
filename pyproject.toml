@@ -63,7 +63,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/kootru-repo/cumulant-residual-cert"
-Documentation = "https://cumulant-residual-cert.readthedocs.io"
+Documentation = "https://kootru-repo.github.io/cumulant-residual-cert/"
 Issues = "https://github.com/kootru-repo/cumulant-residual-cert/issues"
 Reproducibility = "https://github.com/kootru-repo/charge-filtered-cumulant-residuals"
 Organization = "https://labs.kootru.com"
