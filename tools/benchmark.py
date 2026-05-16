@@ -163,9 +163,19 @@ def benchmark_delta_ucb_matchgate(n_qubits: int) -> dict:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--json", action="store_true", help="emit JSON to stdout (for tooling)"
+        "--json",
+        action="store_true",
+        help="emit JSON to stdout (for tooling); human-readable text goes to stderr",
     )
     args = parser.parse_args()
+
+    # When --json is set, send the running commentary to stderr so the caller
+    # can redirect stdout to a file and get parseable JSON. Without --json,
+    # everything goes to stdout as a single readable stream.
+    out = sys.stderr if args.json else sys.stdout
+
+    def say(line: str = "") -> None:
+        print(line, file=out, flush=True)
 
     env = {
         "python": platform.python_version(),
@@ -175,36 +185,34 @@ def main():
     }
 
     results = []
-    print("== certify() ==", flush=True)
+    say("== certify() ==")
     r = benchmark_certify()
     results.append(r)
-    print(
-        f"  {r['call']:<60s} median={r['median_s']*1e3:7.3f} ms  min={r['min_s']*1e3:7.3f} ms",
-        flush=True,
+    say(
+        f"  {r['call']:<60s} median={r['median_s']*1e3:7.3f} ms  min={r['min_s']*1e3:7.3f} ms"
     )
 
-    print("\n== delta_ucb() (random-Pauli shadows) ==", flush=True)
+    say("\n== delta_ucb() (random-Pauli shadows) ==")
     # Random-Pauli enumeration is dense in n_qubits (3^|P| per subword); the
     # built-in pipeline caps at n_qubits=10 by design. Skip past n=6 here so
     # the benchmark terminates in finite time on a developer laptop.
     for n_qubits, n_shots in [(4, 500), (4, 1000), (4, 2000), (6, 500)]:
         r = benchmark_delta_ucb(n_qubits, n_shots)
         results.append(r)
-        print(f"  {r['call']:<60s} median={r['median_s']*1e3:9.3f} ms", flush=True)
+        say(f"  {r['call']:<60s} median={r['median_s']*1e3:9.3f} ms")
 
-    print("\n== delta_ucb_from_majorana_moments() ==", flush=True)
+    say("\n== delta_ucb_from_majorana_moments() ==")
     for n_qubits in [4, 6, 8]:
         r = benchmark_delta_ucb_matchgate(n_qubits)
         results.append(r)
-        print(
+        say(
             f"  {r['call']:<60s} median={r['median_s']*1e3:9.3f} ms  "
-            f"({r['n_majorana_products']} Majorana products)",
-            flush=True,
+            f"({r['n_majorana_products']} Majorana products)"
         )
 
-    print("\n== environment ==")
+    say("\n== environment ==")
     for k, v in env.items():
-        print(f"  {k}: {v}")
+        say(f"  {k}: {v}")
 
     if args.json:
         json.dump({"env": env, "results": results}, sys.stdout, indent=2)
