@@ -37,7 +37,7 @@ uv sync --extra dev --extra all --extra docs
 
 When reporting a bug, please include:
 - The function signature you called and the inputs.
-- The version of `cumulant-residual-cert` (`uv pip show cumulant-residual-cert`).
+- The version of `cumulant-residual-cert` (`uv tree --depth 0` shows it).
 - The version of any chemistry adapter (`pyscf`, `openfermion`, `qiskit-nature`).
 - A minimal reproducing example.
 

@@ -9,18 +9,20 @@ $U(1)$-invariant states.
 
 ## Where to start
 
-Click the Colab badge that matches your state of mind. All notebooks run end-to-end with no API keys.
+Clone the repo, sync the uv environment, open with jupyter:
 
-| If you are... | Start here | Time |
+```bash
+git clone https://github.com/kootru-repo/cumulant-residual-cert
+cd cumulant-residual-cert
+uv sync --extra dev
+uv run jupyter lab notebooks/
+```
+
+| If you are... | Open | Time |
 | --- | --- | --- |
-| New to the library; don't yet know which path applies to your problem | [![Open tutorial][cb]][tut] **`00_tutorial.ipynb`** | ~10 min |
-| Want to see the theorem work on a concrete example before trusting it | [![Open quickstart][cb]][qs] **`01_quickstart.ipynb`** | ~5 min |
-| Have a specific workflow in mind; need the code, not the theory | [![Open cookbook][cb]][cb-nb] **`05_cookbook.ipynb`** | scan |
-
-[cb]: https://colab.research.google.com/assets/colab-badge.svg
-[tut]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/00_tutorial.ipynb
-[qs]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/01_quickstart.ipynb
-[cb-nb]: https://colab.research.google.com/github/kootru-repo/cumulant-residual-cert/blob/main/notebooks/05_cookbook.ipynb
+| New to the library; don't yet know which path applies to your problem | [`00_tutorial.ipynb`](notebooks/00_tutorial.ipynb) | ~10 min |
+| Want to see the theorem work on a concrete example before trusting it | [`01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) | ~5 min |
+| Have a specific workflow in mind; need the code, not the theory | [`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb) | scan |
 
 > *Peer reviewer or referee of the underlying paper?* The canonical reproducibility artefact is [`charge-filtered-cumulant-residuals`](https://github.com/kootru-repo/charge-filtered-cumulant-residuals) (Zenodo concept DOI [10.5281/zenodo.20129664](https://doi.org/10.5281/zenodo.20129664), auto-tracks the latest version): claim-indexed audit notebooks, pytest suite with explicit assertions on the manuscript headlines, lightweight mutation sanity harness, SHA256-pinned deposited data, and a headless-CI notebook workflow that reruns every notebook end-to-end on every push. The present library is the user-facing companion; its catalog constants are CI-checked against that repo's independent implementation on every push.
 
@@ -52,17 +54,22 @@ required. Install directly from the repo:
 ```bash
 GIT=git+https://github.com/kootru-repo/cumulant-residual-cert.git
 
-# Add to a uv-managed project (recommended for downstream users)
+# Add to a uv-managed project
 uv add "cumulant_residual_cert@${GIT}"
 
-# Or install into the current venv (one-off scripts, notebooks)
-uv pip install "cumulant_residual_cert@${GIT}"
-
-# With chemistry-stack adapters (same pattern; choose what you need)
+# With chemistry-stack adapters (choose what you need)
 uv add "cumulant_residual_cert[pyscf]@${GIT}"
 uv add "cumulant_residual_cert[openfermion]@${GIT}"
 uv add "cumulant_residual_cert[qiskit-nature]@${GIT}"
 uv add "cumulant_residual_cert[all]@${GIT}"
+```
+
+If your environment is not yet a uv-managed project, initialize one first:
+
+```bash
+uv init my-workflow
+cd my-workflow
+uv add "cumulant_residual_cert@${GIT}"
 ```
 
 Pin to a specific release by appending `@v0.5.0` (or another tag) to the

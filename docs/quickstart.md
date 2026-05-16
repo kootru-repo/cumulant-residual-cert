@@ -6,16 +6,18 @@ The package is installed directly from the GitHub repository via [uv](https://do
 
 ```bash
 GIT=git+https://github.com/kootru-repo/cumulant-residual-cert.git
-
-# Add to a uv-managed project
 uv add "cumulant_residual_cert@${GIT}"
-
-# Or install into the current venv (one-off scripts, notebooks)
-uv pip install "cumulant_residual_cert@${GIT}"
 ```
 
-With one or more chemistry-stack adapters (same pattern, use whichever
-form fits your workflow):
+If your environment is not yet a uv-managed project, initialize one first:
+
+```bash
+uv init my-workflow
+cd my-workflow
+uv add "cumulant_residual_cert@${GIT}"
+```
+
+With one or more chemistry-stack adapters:
 
 ```bash
 uv add "cumulant_residual_cert[pyscf]@${GIT}"

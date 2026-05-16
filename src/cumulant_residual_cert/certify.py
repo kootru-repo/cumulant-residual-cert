@@ -15,11 +15,11 @@ def _lookup_library_version() -> str:
     """Best-effort lookup of the installed package version.
 
     Uses ``importlib.metadata.version`` so the value is correct under
-    standard installs (``uv add ...``, ``uv pip install ...``) and
-    editable installs (``uv sync`` on the repo itself). Falls back to
-    ``"unknown"`` if the package is not installed at all (running
-    directly from source without install), which keeps the certificate
-    machinery functional in development.
+    standard installs (``uv add ...``) and editable installs
+    (``uv sync`` on the repo itself). Falls back to ``"unknown"`` if
+    the package is not installed at all (running directly from source
+    without install), which keeps the certificate machinery functional
+    in development.
     """
     try:
         from importlib.metadata import version as _pkg_version
