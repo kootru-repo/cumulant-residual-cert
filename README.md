@@ -9,7 +9,25 @@ $U(1)$-invariant states.
 
 ## Where to start
 
-Local (recommended for reproducible work):
+Three options, ordered by setup friction.
+
+### Open in GitHub Codespaces (no install, ~60s startup)
+
+<a href="https://codespaces.new/kootru-repo/cumulant-residual-cert?quickstart=1"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" width="200"/></a>
+
+Launches an Ubuntu 22.04 / Debian Bookworm container with VS Code in your browser. The devcontainer's `postCreateCommand` ([.devcontainer/setup.sh](.devcontainer/setup.sh)) installs `uv`, runs `uv sync --extra dev --extra docs`, and verifies the package imports. Then the integrated terminal lets you exercise anything:
+
+```bash
+uv run pytest --cov=cumulant_residual_cert      # unit suite + coverage
+uv run python tools/benchmark.py                # live perf numbers vs the deposited baseline
+uv run python tools/benchmark.py --json > b.json
+uv run jupyter lab --ip=0.0.0.0 --no-browser    # notebooks on auto-forwarded :8888
+uv run mkdocs serve --dev-addr=0.0.0.0:8000     # docs preview on auto-forwarded :8000
+```
+
+Free for 60 hours per month on a personal GitHub account; 120h with GitHub Pro.
+
+### Local install (recommended for sustained development)
 
 ```bash
 git clone https://github.com/kootru-repo/cumulant-residual-cert
@@ -18,7 +36,9 @@ uv sync --extra dev
 uv run jupyter lab notebooks/
 ```
 
-Or open any notebook directly in Colab via the badge at the top of each. Each notebook detects on first run whether the library is already installed; if not, it bootstraps `uv` via `astral.sh/uv/install.sh` and installs the library into the kernel.
+### Open a single notebook in Colab
+
+Click the badge at the top of any notebook in the table below. Each notebook detects on first run whether the library is already installed; if not, it bootstraps `uv` via `astral.sh/uv/install.sh` and installs the library into the kernel.
 
 | If you are... | Open | Colab | Time |
 | --- | --- | --- | --- |

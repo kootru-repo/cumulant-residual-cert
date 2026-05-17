@@ -1,0 +1,40 @@
+{
+  "name": "cumulant-residual-cert (Ubuntu)",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": false,
+        "jupyter.notebookFileRoot": "${workspaceFolder}",
+        "ruff.enable": true,
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/.pytest_cache": true,
+          "**/.ruff_cache": true,
+          "**/site": true
+        }
+      }
+    }
+  },
+  "forwardPorts": [8888, 8000],
+  "portsAttributes": {
+    "8888": {
+      "label": "JupyterLab",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "mkdocs serve (docs preview)",
+      "onAutoForward": "silent"
+    }
+  },
+  "remoteUser": "vscode"
+}
