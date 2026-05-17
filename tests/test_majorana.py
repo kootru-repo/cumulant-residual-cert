@@ -170,9 +170,7 @@ def test_word_charged_word_has_only_odd_majorana_products():
 
 def test_word_chemistry_catalog_word_charge_neutral_to_even_majorana():
     """a_dag a_dag a a at sites 1, 2, 3, 4 decomposes into even-degree products."""
-    decomp = word_majorana_decomposition(
-        ["a_dag", "a_dag", "a", "a"], [1, 2, 3, 4]
-    )
+    decomp = word_majorana_decomposition(["a_dag", "a_dag", "a", "a"], [1, 2, 3, 4])
     for indices, coeff in decomp.items():
         assert len(indices) % 2 == 0, indices
         assert abs(coeff) > 1e-15
@@ -197,7 +195,7 @@ def test_word_decomposition_matches_dense_operator():
     from cumulant_residual_cert._fermion import I2, _kron, letter_op
 
     n = 4
-    dim = 2 ** n
+    dim = 2**n
     X = np.array([[0, 1], [1, 0]], dtype=complex)
     Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
     Z = np.array([[1, 0], [0, -1]], dtype=complex)
@@ -206,7 +204,7 @@ def test_word_decomposition_matches_dense_operator():
     def majorana_dense(j: int) -> np.ndarray:
         """gamma_j in JW form. 1-based j; site p has gamma_{2p-1}, gamma_{2p}."""
         site = (j + 1) // 2  # 1-based site
-        is_odd = (j % 2 == 1)
+        is_odd = j % 2 == 1
         blocks = []
         for s in range(1, n + 1):
             if s < site:
@@ -235,6 +233,6 @@ def test_word_decomposition_matches_dense_operator():
     direct = letter_op(letters[0], sites[0], n)
     for L, s in zip(letters[1:], sites[1:], strict=False):
         direct = direct @ letter_op(L, s, n)
-    assert np.allclose(reconstructed, direct, atol=1e-10), (
-        f"max diff: {np.max(np.abs(reconstructed - direct))}"
-    )
+    assert np.allclose(
+        reconstructed, direct, atol=1e-10
+    ), f"max diff: {np.max(np.abs(reconstructed - direct))}"

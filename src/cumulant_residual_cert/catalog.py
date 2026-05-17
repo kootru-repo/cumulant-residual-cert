@@ -96,9 +96,7 @@ class Catalog:
         names_seen: set[str] = set()
         for w in self.words:
             if w.length > self.r:
-                raise ValueError(
-                    f"word {w.name!r} has length {w.length} > r = {self.r}"
-                )
+                raise ValueError(f"word {w.name!r} has length {w.length} > r = {self.r}")
             if not w.is_charge_neutral:
                 raise ValueError(
                     f"word {w.name!r} is not charge-neutral; this library certifies "

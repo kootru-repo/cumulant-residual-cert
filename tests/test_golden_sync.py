@@ -119,9 +119,7 @@ def test_audit_repo_cross_check():
         positives = sum(1 for c in w.charges if c == +1)
         negatives = sum(1 for c in w.charges if c == -1)
         zeros = sum(1 for c in w.charges if c == 0)
-        assert positives == negatives, (
-            f"word {w.name!r} should be charge-neutral; got {w.charges}"
-        )
+        assert positives == negatives, f"word {w.name!r} should be charge-neutral; got {w.charges}"
         h, z = positives, zeros
         audit_charge = int(round(audit_B_charge_r(h, z, cat.r)))
         library_charge = constants.charge_filtered(cat.r, w)
@@ -155,8 +153,7 @@ def test_audit_catalog_covers_all_five_chemistry_word_types():
     audit_catalog_path = audit_path / "src" / "connected_layer_sector" / "catalog.py"
     if not audit_catalog_path.exists():
         pytest.skip(
-            f"AUDIT_REPO_PATH={audit_path} does not have "
-            f"src/connected_layer_sector/catalog.py"
+            f"AUDIT_REPO_PATH={audit_path} does not have " f"src/connected_layer_sector/catalog.py"
         )
 
     sys.path.insert(0, str(audit_path / "src"))

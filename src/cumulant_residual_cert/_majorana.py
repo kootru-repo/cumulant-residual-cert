@@ -69,7 +69,7 @@ def _canonicalize_majorana_product(indices: list[int]) -> tuple[int, tuple[int, 
             if i > 0:
                 i -= 1
         elif arr[i] == arr[i + 1]:
-            del arr[i:i + 2]
+            del arr[i : i + 2]
             if i > 0:
                 i -= 1
         else:
@@ -85,7 +85,8 @@ def multiply_majorana_terms(a: MajoranaTerm, b: MajoranaTerm) -> MajoranaTerm:
 
 
 def word_majorana_decomposition(
-    letters: Iterable[str], sites: Iterable[int],
+    letters: Iterable[str],
+    sites: Iterable[int],
 ) -> MajoranaDecomposition:
     """Decompose a fermionic word into a sum of canonical Majorana products."""
     letters_list = list(letters)

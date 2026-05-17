@@ -27,7 +27,7 @@ def _slater_state(occupied: tuple[int, ...], n: int) -> np.ndarray:
     idx = 0
     for b in bits:
         idx = (idx << 1) | b
-    psi = np.zeros(2 ** n, dtype=complex)
+    psi = np.zeros(2**n, dtype=complex)
     psi[idx] = 1.0
     return np.outer(psi, psi.conj())
 
@@ -83,7 +83,7 @@ def test_evaluate_subword_moment_a_dag_a_matches_1rdm():
     n = 3
     # Pick a non-trivial state: equal superposition of two Slaters with
     # different occupations to give nontrivial off-diagonal 1-RDM.
-    psi = np.zeros(2 ** n, dtype=complex)
+    psi = np.zeros(2**n, dtype=complex)
     psi[0b011] = 1.0 / np.sqrt(2)
     psi[0b101] = 1.0 / np.sqrt(2)
     rho = np.outer(psi, psi.conj())
@@ -128,8 +128,8 @@ def test_random_product_state_gives_zero_catalog_cumulants():
     rng = np.random.default_rng(42)
     n = 4
     occupation_probs = rng.uniform(0.1, 0.9, size=n)
-    weights = np.zeros(2 ** n, dtype=complex)
-    for idx in range(2 ** n):
+    weights = np.zeros(2**n, dtype=complex)
+    for idx in range(2**n):
         bits = [(idx >> (n - 1 - i)) & 1 for i in range(n)]
         prob = 1.0
         for p_i, b in zip(occupation_probs, bits, strict=False):
@@ -195,7 +195,7 @@ def test_correlated_state_rdm_cumulant_matches_dense():
     """
     rng = np.random.default_rng(7)
     n = 4
-    dim = 2 ** n
+    dim = 2**n
     rho = np.zeros((dim, dim), dtype=complex)
     # Group basis indices by particle number.
     sectors: dict[int, list[int]] = {}
@@ -229,5 +229,7 @@ def test_correlated_state_rdm_cumulant_matches_dense():
         kappa_rdm = evaluate_word_cumulant(w, sites, rdm1, rdm2, rdm3, rdm4)
         kappa_dense = _connected_cumulant_dense(rho, w.letters, sites, n)
         assert kappa_rdm == pytest.approx(kappa_dense, abs=1e-9, rel=1e-6), (
-            w.name, kappa_rdm, kappa_dense
+            w.name,
+            kappa_rdm,
+            kappa_dense,
         )

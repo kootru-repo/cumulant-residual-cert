@@ -58,7 +58,10 @@ def package_estimate(
     user assertion).
     """
     bound = certify(
-        catalog, delta=delta, level=level, delta_provenance=delta_provenance,
+        catalog,
+        delta=delta,
+        level=level,
+        delta_provenance=delta_provenance,
     )
     return AdapterEstimate(
         delta=delta,

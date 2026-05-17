@@ -83,11 +83,11 @@ def test_per_word_values():
     cat = Catalog.chemistry_r4()
     table = constants.compute(cat)
     expected = {
-        "n_i n_j n_k":              (105, 1, 1),
-        "a_dag_i a_j n_k":          (105, 1, 1),
-        "a_dag_i a_j n_k n_ell":    (105, 53, 3),
+        "n_i n_j n_k": (105, 1, 1),
+        "a_dag_i a_j n_k": (105, 1, 1),
+        "a_dag_i a_j n_k n_ell": (105, 53, 3),
         "a_dag_i a_dag_j a_k a_ell": (105, 1, 1),
-        "n_i n_j n_k n_ell":        (105, 105, 5),
+        "n_i n_j n_k n_ell": (105, 105, 5),
     }
     for name, (Bu, Bc, Bh) in expected.items():
         wc = table.per_word[name]

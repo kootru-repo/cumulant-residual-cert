@@ -109,7 +109,12 @@ def evaluate_subword_moment(
     total = 0.0 + 0j
     for (creations, annihilations), coeff in combined.items():
         val = evaluate_normal_ordered_term(
-            creations, annihilations, rdm1, rdm2, rdm3, rdm4,
+            creations,
+            annihilations,
+            rdm1,
+            rdm2,
+            rdm3,
+            rdm4,
         )
         total += coeff * val
     return total
@@ -137,7 +142,12 @@ def evaluate_word_cumulant(
                 sub_letters = tuple(word.letters[i - 1] for i in key)
                 sub_sites = tuple(sites[i - 1] for i in key)
                 sub_moments[key] = evaluate_subword_moment(
-                    sub_letters, sub_sites, rdm1, rdm2, rdm3, rdm4,
+                    sub_letters,
+                    sub_sites,
+                    rdm1,
+                    rdm2,
+                    rdm3,
+                    rdm4,
                 )
 
     kappa: complex = 0.0 + 0j

@@ -117,9 +117,7 @@ def test_normal_order_a_dag_a_n():
     coefficient determined by the permutation.
     """
     i, j, k = 1, 2, 3
-    prims = (letter_primitives("a_dag", i)
-             + letter_primitives("a", j)
-             + letter_primitives("n", k))
+    prims = letter_primitives("a_dag", i) + letter_primitives("a", j) + letter_primitives("n", k)
     combined = combine_terms(normal_order(prims))
     # Expect a single term: -a^dag_1 a^dag_3 a_2 a_3.
     # Canonical creations (1, 3) +1 parity. Canonical annihilations [2, 3]

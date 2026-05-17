@@ -134,7 +134,7 @@ def _normal_order_with_sign(primitives: list[Primitive], sign: int) -> list[Norm
         if kind_left == "-" and kind_right == "+":
             # Anti-commutation: a_p a^dag_q = delta_{p,q} - a^dag_q a_p.
             head = primitives[:i]
-            tail = primitives[i + 2:]
+            tail = primitives[i + 2 :]
             results: list[NormalOrderedTerm] = []
             # Contracted term (only if p == q).
             if site_left == site_right:
@@ -154,12 +154,14 @@ def _normal_order_with_sign(primitives: list[Primitive], sign: int) -> list[Norm
     sign_a, sorted_a = _sign_sort_annihilations(annihilations)
     if sign_a == 0:
         return []
-    return [NormalOrderedTerm(sign=sign * sign_c * sign_a,
-                              creations=sorted_c,
-                              annihilations=sorted_a)]
+    return [
+        NormalOrderedTerm(sign=sign * sign_c * sign_a, creations=sorted_c, annihilations=sorted_a)
+    ]
 
 
-def combine_terms(terms: Iterable[NormalOrderedTerm]) -> dict[tuple[tuple[int, ...], tuple[int, ...]], int]:
+def combine_terms(
+    terms: Iterable[NormalOrderedTerm],
+) -> dict[tuple[tuple[int, ...], tuple[int, ...]], int]:
     """Group normal-ordered terms by their (creations, annihilations) key.
 
     Returns a mapping ``(creations, annihilations) -> integer coefficient``,

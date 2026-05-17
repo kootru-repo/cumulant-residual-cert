@@ -70,7 +70,7 @@ def _pauli_expand(M: np.ndarray, n: int, tol: float = 1e-12) -> dict[tuple[str, 
             f"_pauli_expand is dense (O(4^n)); refusing to enumerate for n_qubits={n}. "
             "Use a matchgate or fermionic-Gaussian protocol for chemistry-scale registers."
         )
-    dim = 2 ** n
+    dim = 2**n
     out: dict[tuple[str, ...], complex] = {}
     for label in product("IXYZ", repeat=n):
         P = _pauli_op(label)
@@ -83,7 +83,9 @@ def _pauli_expand(M: np.ndarray, n: int, tol: float = 1e-12) -> dict[tuple[str, 
 ShadowShot = tuple[tuple[str, ...], tuple[int, ...]]
 
 
-def _one_shot_estimator(label: tuple[str, ...], basis: tuple[str, ...], outcomes: tuple[int, ...]) -> float:
+def _one_shot_estimator(
+    label: tuple[str, ...], basis: tuple[str, ...], outcomes: tuple[int, ...]
+) -> float:
     """Random-Pauli shadow snapshot estimator $\\hat{\\langle P \\rangle}_t$.
 
     Returns $3^{|P|} \\prod_{i:\\,P_i \\ne I} b_{t,i}$ if $B_{t,i} = P_i$ on the
@@ -103,12 +105,12 @@ def _one_shot_estimator(label: tuple[str, ...], basis: tuple[str, ...], outcomes
         if basis[i] != P_i:
             return 0.0
         val *= outcomes[i]
-    return (3 ** weight) * val
+    return (3**weight) * val
 
 
 def _hoeffding_radius(weight: int, M: int, alpha_per: float) -> float:
     """Per-Pauli Hoeffding half-width with the textbook random-Pauli range factor."""
-    return (3 ** weight) * sqrt(2 * log(2 / alpha_per) / M)
+    return (3**weight) * sqrt(2 * log(2 / alpha_per) / M)
 
 
 def _partition_radius_contribution(
@@ -137,9 +139,7 @@ def _partition_radius_contribution(
         raise ValueError("block_hat_mu_mag and block_rads must have equal length")
     if n == 0:
         return 0.0
-    factor_upper = [
-        min(operator_norm_bound, block_hat_mu_mag[i] + block_rads[i]) for i in range(n)
-    ]
+    factor_upper = [min(operator_norm_bound, block_hat_mu_mag[i] + block_rads[i]) for i in range(n)]
     total = 0.0
     for j in range(n):
         others = 1.0
@@ -284,9 +284,7 @@ def delta_ucb_from_subword_moments(
         subword_data = per_subword[w.name]
         m = w.length
         expected_blocks = {
-            tuple(sorted(B))
-            for k in range(1, m + 1)
-            for B in combinations(range(1, m + 1), k)
+            tuple(sorted(B)) for k in range(1, m + 1) for B in combinations(range(1, m + 1), k)
         }
         missing = expected_blocks - set(subword_data.keys())
         if missing:
@@ -295,6 +293,7 @@ def delta_ucb_from_subword_moments(
             )
         for key, (mean_val, rad_val) in subword_data.items():
             import math
+
             if not math.isfinite(rad_val):
                 raise ValueError(
                     f"per_subword[{w.name!r}][{key}]: radius must be finite; got {rad_val}"
@@ -310,7 +309,10 @@ def delta_ucb_from_subword_moments(
                 )
 
     return _ucb_from_subword_moments(
-        per_subword, catalog, confidence, n_protocol_terms,
+        per_subword,
+        catalog,
+        confidence,
+        n_protocol_terms,
     )
 
 
@@ -373,16 +375,12 @@ def delta_ucb(
     # readable error rather than failing deep inside the Mobius transform.
     for w, sites in zip(catalog, sites_per_word, strict=False):
         if len(sites) != w.length:
-            raise ValueError(
-                f"word {w.name!r} has length {w.length} but {len(sites)} sites given"
-            )
+            raise ValueError(f"word {w.name!r} has length {w.length} but {len(sites)} sites given")
         if len(set(sites)) != len(sites):
             raise ValueError(f"word {w.name!r} has duplicate site indices: {sites}")
         for s in sites:
             if not (1 <= s <= n_qubits):
-                raise ValueError(
-                    f"word {w.name!r} site {s} outside 1..n_qubits={n_qubits}"
-                )
+                raise ValueError(f"word {w.name!r} site {s} outside 1..n_qubits={n_qubits}")
 
     for idx, shot in enumerate(shadow_samples):
         if not (isinstance(shot, tuple) and len(shot) == 2):
@@ -443,7 +441,10 @@ def delta_ucb(
 
     # 4. Delegate the protocol-agnostic Mobius + propagation step.
     return _ucb_from_subword_moments(
-        per_subword, catalog, confidence, n_protocol_terms=T,
+        per_subword,
+        catalog,
+        confidence,
+        n_protocol_terms=T,
     )
 
 
@@ -621,15 +622,11 @@ def delta_ucb_split(
         Structured result; see attributes.
     """
     if not 0 < fraction_diagnostic < 1:
-        raise ValueError(
-            f"fraction_diagnostic must be in (0, 1); got {fraction_diagnostic!r}"
-        )
+        raise ValueError(f"fraction_diagnostic must be in (0, 1); got {fraction_diagnostic!r}")
     shots = list(shadow_samples)
     M = len(shots)
     if M < 2:
-        raise ValueError(
-            f"sample-split needs at least 2 shadow shots; got {M}"
-        )
+        raise ValueError(f"sample-split needs at least 2 shadow shots; got {M}")
 
     if seed is None:
         # Deterministic even/odd split. With fraction_diagnostic = 0.5 this
@@ -695,7 +692,7 @@ def collect_shadows(rho: np.ndarray, n: int, M: int, seed: int = 0) -> list[Shad
         rho_rot = U @ rho @ U.conj().T
         probs = np.clip(np.real(np.diag(rho_rot)), 0.0, None)
         probs /= probs.sum()
-        idx = int(rng.choice(2 ** n, p=probs))
+        idx = int(rng.choice(2**n, p=probs))
         bits = [(idx >> (n - 1 - i)) & 1 for i in range(n)]
         outcomes = tuple(1 - 2 * b for b in bits)
         shots.append((basis, outcomes))

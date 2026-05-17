@@ -82,9 +82,7 @@ def word_to_fermion_operator(
         )
     for s in sites:
         if not isinstance(s, int) or s < 1:
-            raise ValueError(
-                f"site {s} must be a positive 1-based integer index"
-            )
+            raise ValueError(f"site {s} must be a positive 1-based integer index")
     if len(set(sites)) != len(sites):
         raise ValueError(f"word {word.name!r} has duplicate sites: {sites}")
 

@@ -21,7 +21,9 @@ def test_one_shot_estimator_unbiased_for_single_Z_on_vacuum():
 
     shots = collect_shadows(rho, n=n, M=20000, seed=1)
     label = ("Z", "I")
-    mean = sum(_one_shot_estimator(label, basis, outcomes) for basis, outcomes in shots) / len(shots)
+    mean = sum(_one_shot_estimator(label, basis, outcomes) for basis, outcomes in shots) / len(
+        shots
+    )
     # True <Z_1> on the vacuum is +1.
     assert abs(mean - 1.0) < 0.1, f"snapshot mean {mean:.4f} far from 1.0; missing 3^|P| factor?"
 
@@ -34,5 +36,7 @@ def test_one_shot_estimator_unbiased_for_weight_two_Pauli():
 
     shots = collect_shadows(rho, n=n, M=40000, seed=2)
     label = ("Z", "Z")
-    mean = sum(_one_shot_estimator(label, basis, outcomes) for basis, outcomes in shots) / len(shots)
+    mean = sum(_one_shot_estimator(label, basis, outcomes) for basis, outcomes in shots) / len(
+        shots
+    )
     assert abs(mean - 1.0) < 0.15, f"snapshot mean {mean:.4f} far from 1.0"

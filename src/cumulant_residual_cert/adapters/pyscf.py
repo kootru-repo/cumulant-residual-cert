@@ -219,45 +219,40 @@ def from_rdms(
     # that the catalog word's letters do not refer to duplicate sites.
     n_orb = rdm1.shape[0]
     if rdm1.ndim != 2 or rdm1.shape[0] != rdm1.shape[1]:
-        raise ValueError(
-            f"rdm1 must be a square 2D tensor; got shape {rdm1.shape}"
-        )
+        raise ValueError(f"rdm1 must be a square 2D tensor; got shape {rdm1.shape}")
     for k, rdm_k in (("rdm2", rdm2), ("rdm3", rdm3), ("rdm4", rdm4)):
         if rdm_k is None:
             continue
         rank = {"rdm2": 4, "rdm3": 6, "rdm4": 8}[k]
         if rdm_k.ndim != rank:
-            raise ValueError(
-                f"{k} must have rank {rank}; got ndim {rdm_k.ndim}"
-            )
+            raise ValueError(f"{k} must have rank {rank}; got ndim {rdm_k.ndim}")
         if any(d != n_orb for d in rdm_k.shape):
             raise ValueError(
-                f"{k} must have every dimension == n_orb = {n_orb}; "
-                f"got shape {rdm_k.shape}"
+                f"{k} must have every dimension == n_orb = {n_orb}; " f"got shape {rdm_k.shape}"
             )
 
     for w, sites in zip(catalog, sites_per_word, strict=False):
         if len(sites) != w.length:
             raise ValueError(
-                f"word {w.name!r} has length {w.length} but {len(sites)} "
-                f"sites supplied"
+                f"word {w.name!r} has length {w.length} but {len(sites)} " f"sites supplied"
             )
         sites_t = tuple(int(s) for s in sites)
         if len(set(sites_t)) != len(sites_t):
-            raise ValueError(
-                f"word {w.name!r} has duplicate site indices: {sites_t}"
-            )
+            raise ValueError(f"word {w.name!r} has duplicate site indices: {sites_t}")
         for s in sites_t:
             if not (1 <= s <= n_orb):
-                raise ValueError(
-                    f"word {w.name!r} site {s} is outside 1..n_orb={n_orb}"
-                )
+                raise ValueError(f"word {w.name!r} site {s} is outside 1..n_orb={n_orb}")
 
     cumulants: dict[str, complex] = {}
     for w, sites in zip(catalog, sites_per_word, strict=False):
         sites_t = tuple(int(s) for s in sites)
         cumulants[w.name] = evaluate_word_cumulant(
-            w, sites_t, rdm1, rdm2, rdm3, rdm4,
+            w,
+            sites_t,
+            rdm1,
+            rdm2,
+            rdm3,
+            rdm4,
         )
 
     delta = float(max(abs(k) for k in cumulants.values()))

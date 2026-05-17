@@ -14,7 +14,7 @@ from cumulant_residual_cert.diagnostic import collect_shadows
 
 
 def _vacuum_state(n: int) -> np.ndarray:
-    rho = np.zeros((2 ** n, 2 ** n), dtype=complex)
+    rho = np.zeros((2**n, 2**n), dtype=complex)
     rho[0, 0] = 1.0
     return rho
 
@@ -25,7 +25,7 @@ def _two_particle_basis_state(n: int) -> np.ndarray:
     idx = 0
     for b in bits:
         idx = (idx << 1) | b
-    psi = np.zeros(2 ** n, dtype=complex)
+    psi = np.zeros(2**n, dtype=complex)
     psi[idx] = 1.0
     return np.outer(psi, psi.conj())
 
@@ -273,7 +273,10 @@ def test_subword_moments_pipeline_zero_input_gives_zero_ucb():
                 sub[tuple(sorted(B))] = (0.0 + 0j, 0.0)
         per_subword[w.name] = sub
     result = delta_ucb_from_subword_moments(
-        per_subword, cat, confidence=0.95, n_protocol_terms=0,
+        per_subword,
+        cat,
+        confidence=0.95,
+        n_protocol_terms=0,
     )
     assert result.delta_ucb == 0.0
     assert result.n_paulis == 0
@@ -332,7 +335,10 @@ def test_subword_moments_pipeline_rejects_missing_word():
         per_subword[w.name] = sub
     with pytest.raises(ValueError, match=f"missing entry for word {omitted!r}"):
         delta_ucb_from_subword_moments(
-            per_subword, cat, confidence=0.95, n_protocol_terms=0,
+            per_subword,
+            cat,
+            confidence=0.95,
+            n_protocol_terms=0,
         )
 
 
@@ -355,7 +361,10 @@ def test_subword_moments_pipeline_rejects_missing_subword_block():
     per_subword[first_word.name].pop((1,))
     with pytest.raises(ValueError, match="missing entries for blocks"):
         delta_ucb_from_subword_moments(
-            per_subword, cat, confidence=0.95, n_protocol_terms=0,
+            per_subword,
+            cat,
+            confidence=0.95,
+            n_protocol_terms=0,
         )
 
 
@@ -377,7 +386,10 @@ def test_subword_moments_pipeline_rejects_negative_radius():
     per_subword[first_word.name][(1,)] = (0.0 + 0j, -0.1)
     with pytest.raises(ValueError, match="radius must be >= 0"):
         delta_ucb_from_subword_moments(
-            per_subword, cat, confidence=0.95, n_protocol_terms=0,
+            per_subword,
+            cat,
+            confidence=0.95,
+            n_protocol_terms=0,
         )
 
 

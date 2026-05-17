@@ -86,7 +86,7 @@ def test_pyscf_from_rdms_bernoulli_class_yields_zero_delta():
         idx = 0
         for b in bits:
             idx = (idx << 1) | b
-        psi = np.zeros(2 ** n, dtype=complex)
+        psi = np.zeros(2**n, dtype=complex)
         psi[idx] = 1.0
         return np.outer(psi, psi.conj())
 

@@ -76,7 +76,9 @@ def get(level: Level, r: int, word: FermionicWord) -> int:
         return charge_filtered(r, word)
     if level == "block_refined":
         return block_refined(r, word)
-    raise ValueError(f"unknown level {level!r}; expected one of {{universal, charge_filtered, block_refined}}")
+    raise ValueError(
+        f"unknown level {level!r}; expected one of {{universal, charge_filtered, block_refined}}"
+    )
 
 
 def chemistry_r4_table() -> ConstantsTable:
