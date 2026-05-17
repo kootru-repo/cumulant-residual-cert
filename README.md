@@ -42,9 +42,31 @@ Or open any notebook directly in Colab via the badge at the top of each. Each no
 
 ## Documentation
 
-- **Rendered API reference + guides:** <https://kootru-repo.github.io/cumulant-residual-cert/>. Auto-generated from docstrings by `mkdocstrings`; rebuilt on every push to `main`. Includes the constants tables, the JW range caveat, the quickstart walkthrough, and the full API surface.
-- **Performance characteristics + scaling laws:** [`docs/performance.md`](docs/performance.md). Wall-clock medians for every public entry point at a range of `n_qubits` and shot counts, plus the asymptotic story (`delta_ucb` random-Pauli scales as $3^n$; the matchgate path is $n$-independent).
-- **Reproduce the benchmarks yourself:** `uv run python tools/benchmark.py` (add `--json` for machine-readable output).
+- **Rendered API reference + guides:** <https://kootru-repo.github.io/cumulant-residual-cert/>. Auto-generated from docstrings by `mkdocstrings`; rebuilt on every push to `main`. Pages: Home, Quickstart (worked numerical example), Constants table ($M_r$, $B_r$, $B^\text{charge}_r$, $\widehat B^\text{charge}_r$), JW range caveat (random-Pauli vs matchgate trade-offs), API reference (every public symbol with signature + docstring), Performance, Reproducibility.
+- **Performance characteristics + scaling laws:** [`docs/performance.md`](docs/performance.md) (also linked from the docs site). Wall-clock medians for every public entry point.
+
+**Which page should I open?**
+
+- *Looking up a function signature or kwargs:* → API reference.
+- *Picking between the four delta-source paths* (closed-form Bernoulli, RDMs, random-Pauli shadows, matchgate shadows): → Quickstart, then [`05_cookbook.ipynb`](notebooks/05_cookbook.ipynb).
+- *Deciding which `delta_ucb` variant for your register size:* → Performance. The random-Pauli path is $3^n$ in `n_qubits` and impractical past `n=4` on a CPU; the matchgate path is `n`-independent. Concrete numbers in the perf table below.
+- *Why does `delta_ucb` refuse `n_qubits > 10`?* → JW range caveat.
+- *I'm extending the library with a new catalog or adapter:* → API reference > `Catalog`, `FermionicWord`, and the `adapters/` modules.
+
+**Benchmarks on your own machine.** Compare to the published baseline before committing to a workflow:
+
+```bash
+uv run python tools/benchmark.py                          # human-readable on stdout
+uv run python tools/benchmark.py --json > bench.json      # stdout JSON, stderr commentary
+```
+
+The JSON schema is `{"env": {python, platform, processor, numpy}, "results": [{call, median_s, ...}]}` with environment metadata included so cross-machine numbers are interpretable.
+
+**When to run the benchmark:**
+
+- *Confirming the library scales as advertised on your hardware* before adopting it in a workflow.
+- *Regression-check after a numpy / scipy upgrade or an internal refactor:* commit a baseline `bench.json` and diff against it in CI.
+- *Building a scaling plot for a paper or report:* `--json` output feeds a one-line matplotlib script (one entry per `call`, with `n_qubits`, `n_shots`, and `n_majorana_products` already broken out).
 
 ## Requirements
 
