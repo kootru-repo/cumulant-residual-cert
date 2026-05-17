@@ -95,6 +95,14 @@ jobs:
       - name: Install
         run: uv sync --python 3.12 --extra dev
 
+      - name: Install audit repo runtime deps
+        # The audit repo's connected_layer_sector/__init__.py transitively
+        # imports states.py, which depends on scipy. CRC's --extra dev does
+        # not pull scipy, so the audit cross-check test would fail at import
+        # time. Install audit's runtime deps explicitly (numpy is already
+        # present via CRC).
+        run: uv pip install scipy
+
       - name: Run sync test
         env:
           AUDIT_REPO_PATH: ${{ github.workspace }}/_audit

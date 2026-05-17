@@ -221,10 +221,12 @@ def test_qiskit_nature_word_to_fermionic_op_exact_label():
     w = FermionicWord(("n", "n", "n"), name="n n n")
     op = word_to_fermionic_op(w, sites=(1, 2, 3))
     # n_i is +_i -_i, so n n n -> "+_0 -_0 +_1 -_1 +_2 -_2".
+    # FermionicOp.items() yields (label_str, complex) pairs (SparseLabelOp API);
+    # the older FermionicOp.terms() now returns (list[tuple[str,int]], complex)
+    # which would not be hashable for the set membership check below.
     expected_label = "+_0 -_0 +_1 -_1 +_2 -_2"
-    assert expected_label in {label for label, _ in op.terms()}, dict(op.terms())
-    # And coefficient is 1.0 on that label.
-    coeffs_by_label = {label: coeff for label, coeff in op.terms()}
+    coeffs_by_label = dict(op.items())
+    assert expected_label in coeffs_by_label, coeffs_by_label
     assert coeffs_by_label[expected_label] == pytest.approx(1.0)
 
 
@@ -236,7 +238,7 @@ def test_qiskit_nature_word_to_fermionic_op_a_dag_a_n():
     w = FermionicWord(("a_dag", "a", "n"), name="ad a n")
     op = word_to_fermionic_op(w, sites=(1, 2, 3))
     expected_label = "+_0 -_1 +_2 -_2"
-    assert expected_label in {label for label, _ in op.terms()}
+    assert expected_label in dict(op.items())
 
 
 def test_qiskit_nature_from_problem_requires_bernoulli_assertion():
