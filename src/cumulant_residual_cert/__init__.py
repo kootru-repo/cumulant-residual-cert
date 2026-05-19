@@ -11,10 +11,6 @@ Public surface:
 from __future__ import annotations
 
 from . import constants
-from ._matchgate_shadow import (
-    MatchgateShadowRecord,
-    generate_matchgate_shadow_record,
-)
 from .catalog import Catalog, FermionicWord, word
 from .certify import CertifiedBound, DeltaProvenance, certify
 from .diagnostic import (
@@ -23,7 +19,6 @@ from .diagnostic import (
     delta_ucb,
     delta_ucb_from_majorana_moments,
     delta_ucb_from_subword_moments,
-    delta_ucb_matchgate_shadows,
     delta_ucb_split,
 )
 
@@ -32,7 +27,6 @@ __all__ = [
     "CertifiedBound",
     "DeltaProvenance",
     "FermionicWord",
-    "MatchgateShadowRecord",
     "UCBResult",
     "UCBSplitResult",
     "certify",
@@ -40,9 +34,7 @@ __all__ = [
     "delta_ucb",
     "delta_ucb_from_majorana_moments",
     "delta_ucb_from_subword_moments",
-    "delta_ucb_matchgate_shadows",
     "delta_ucb_split",
-    "generate_matchgate_shadow_record",
     "word",
 ]
 

@@ -41,7 +41,6 @@ DeltaProvenance = Literal[
     "ucb_subword",
     "ucb_majorana",
     "ucb_matchgate_shadows",
-    "ucb_matchgate_shadows_u1_assumed",
 ]
 
 
