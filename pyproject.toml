@@ -105,4 +105,7 @@ reportMissingImports = "warning"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not perf'"
+markers = [
+    "perf: opt-in performance benchmark (skipped by default; enable with -m perf)",
+]
