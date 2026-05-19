@@ -1,5 +1,11 @@
 # cumulant-residual-cert
 
+[![CI](https://github.com/kootru-repo/cumulant-residual-cert/actions/workflows/ci.yml/badge.svg)](https://github.com/kootru-repo/cumulant-residual-cert/actions/workflows/ci.yml)
+[![Docs](https://github.com/kootru-repo/cumulant-residual-cert/actions/workflows/docs.yml/badge.svg)](https://github.com/kootru-repo/cumulant-residual-cert/actions/workflows/docs.yml)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20129665.svg)](https://doi.org/10.5281/zenodo.20129665)
+
 Deterministic bias certificates for charge-neutral fermionic-word observables on
 $U(1)$-invariant states.
 
