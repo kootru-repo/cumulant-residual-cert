@@ -1,0 +1,29 @@
+{
+    "upload_type": "software",
+    "title": "cumulant-residual-cert: deterministic bias certificates for charge-neutral fermionic-word observables",
+    "creators": [
+        {
+            "name": "Craton, Andrew",
+            "affiliation": "Kootru Labs",
+            "orcid": "0009-0001-2269-8599"
+        }
+    ],
+    "description": "User-facing Python library for computing deterministic upper bounds on the bias of second-order cumulant truncation, for charge-neutral fermionic-word observables on U(1)-invariant states. Ships five Colab-ready notebooks and optional adapters for PySCF, OpenFermion, and Qiskit-Nature. Apache 2.0.",
+    "license": "Apache-2.0",
+    "keywords": [
+        "quantum-chemistry",
+        "fermionic-shadows",
+        "cumulant-truncation",
+        "bias-certificate",
+        "U(1)-symmetry",
+        "reduced-density-matrix"
+    ],
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.5281/zenodo.20129665",
+            "relation": "isReferencedBy",
+            "resource_type": "publication-other"
+        }
+    ]
+}
