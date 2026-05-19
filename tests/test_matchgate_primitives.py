@@ -169,7 +169,7 @@ def test_apply_matchgate_rotation_empty_product():
 
 
 def test_apply_matchgate_rotation_single_gamma():
-    """gamma_i -> sum_j Q_{j,i} gamma_j (contragredient column convention)."""
+    """gamma_i -> sum_j Q_{i,j} gamma_j (Heisenberg row convention)."""
     rng = np.random.default_rng(seed=11)
     Q = sample_matchgate_rotation(2, rng)  # 4x4
     dim = 4
@@ -177,8 +177,8 @@ def test_apply_matchgate_rotation_single_gamma():
     out = apply_matchgate_rotation_to_majorana_product(Q, (i,))
     for j in range(dim):
         key = (j,)
-        if abs(Q[j, i]) > 1e-15:
-            assert out[key] == pytest.approx(Q[j, i] + 0j)
+        if abs(Q[i, j]) > 1e-15:
+            assert out[key] == pytest.approx(Q[i, j] + 0j)
         else:
             assert key not in out or abs(out[key]) < 1e-15
 
@@ -192,8 +192,9 @@ def test_apply_matchgate_rotation_canonicalization():
     """
     dim = 4
     Q = np.eye(dim)
-    # Swap rows 0 and 1 of Q. Since gamma_i -> sum_j Q_{j,i} gamma_j,
-    # gamma_0 -> Q_{0,0} gamma_0 + Q_{1,0} gamma_1 = gamma_1 (since col 0 is e_1).
+    # Swap rows 0 and 1 of Q. Since gamma_i -> sum_j Q_{i,j} gamma_j,
+    # row 0 (now e_1) sends gamma_0 -> gamma_1, and row 1 (now e_0) sends
+    # gamma_1 -> gamma_0.
     Q[[0, 1]] = Q[[1, 0]]
     out = apply_matchgate_rotation_to_majorana_product(Q, (0, 1))
     # Expected: gamma_0 gamma_1 -> gamma_1 gamma_0 = -gamma_0 gamma_1
@@ -204,16 +205,17 @@ def test_apply_matchgate_rotation_canonicalization():
 def test_apply_matchgate_rotation_squared_indices_collapse():
     """A rotation that sends gamma_i and gamma_j to the same gamma collapses via gamma^2 = 1.
 
-    Q's columns 0 and 1 both equal e_0 (so gamma_0 -> gamma_0 and gamma_1 -> gamma_0).
-    This is not orthogonal but it tests the canonicalization for repeated indices.
-    Then gamma_0 gamma_1 -> gamma_0 gamma_0 = 1 (empty product).
+    With the row convention gamma_i -> sum_j Q_{i,j} gamma_j, rows 0 and 1 are
+    both set to e_0 so gamma_0 -> gamma_0 and gamma_1 -> gamma_0. This is not
+    orthogonal but it tests canonicalization for repeated indices. Then
+    gamma_0 gamma_1 -> gamma_0 gamma_0 = 1 (empty product).
     """
     dim = 4
     Q = np.zeros((dim, dim))
     Q[0, 0] = 1.0
-    Q[0, 1] = 1.0
-    Q[1, 2] = 1.0
-    Q[2, 3] = 1.0
+    Q[1, 0] = 1.0
+    Q[2, 1] = 1.0
+    Q[3, 2] = 1.0
     out = apply_matchgate_rotation_to_majorana_product(Q, (0, 1))
     assert set(out.keys()) == {()}
     assert out[()] == pytest.approx(1.0 + 0j)
@@ -235,10 +237,11 @@ def test_apply_matchgate_rotation_index_out_of_range():
 
 
 def test_apply_matchgate_rotation_composition_consistency():
-    """Applying Q1 then Q2 equals applying (Q2 @ Q1) to the same gamma.
+    """Applying Q1 then Q2 equals applying (Q1 @ Q2) to the same gamma.
 
-    Specifically, for a single gamma_i, the rotated coefficient on gamma_j
-    after applying Q1 then Q2 is (Q2 @ Q1)[j, i].
+    With the row convention gamma_i -> sum_j Q[i, j] gamma_j, applying Q1
+    then Q2 sends gamma_i to sum_{j, k} Q1[i, j] Q2[j, k] gamma_k, with
+    coefficient (Q1 @ Q2)[i, k] on gamma_k.
     """
     rng = np.random.default_rng(seed=2026519)
     n_modes = 2
@@ -254,8 +257,8 @@ def test_apply_matchgate_rotation_composition_consistency():
         rotated = apply_matchgate_rotation_to_majorana_product(Q2, indices)
         for new_idx, new_coeff in rotated.items():
             final[new_idx] = final.get(new_idx, 0.0 + 0j) + coeff * new_coeff
-    # Composed rotation Q2 @ Q1 applied directly.
-    Qcomp = Q2 @ Q1
+    # Composed rotation Q1 @ Q2 applied directly.
+    Qcomp = Q1 @ Q2
     direct = apply_matchgate_rotation_to_majorana_product(Qcomp, (i,))
     for j in range(dim):
         key = (j,)

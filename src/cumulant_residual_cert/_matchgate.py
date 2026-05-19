@@ -22,13 +22,13 @@ Conventions
   This differs from the 1-based convention used elsewhere in the package
   (``_majorana.py``); the canonicalization routine in ``_majorana.py`` is
   index-agnostic and is reused here.
-- The rotation acts on Majorana operators via the **contragredient**
-  convention $\\gamma_i \\mapsto \\sum_j Q_{ji} \\gamma_j$, i.e. column-wise
-  contraction of $Q$ with the $\\gamma$ vector. Equivalently, with
-  $\\vec{\\gamma}$ a column vector, $\\vec{\\gamma}' = Q^T \\vec{\\gamma}$.
-  This is the convention used in the SCOPE.md declaration of the
-  matchgate-shadow-diagnostic companion paper (transposed indices reflect
-  the contravariant transformation of operators relative to states).
+- The rotation acts on Majorana operators via the **Heisenberg** convention
+  $\\gamma_i \\mapsto \\sum_j Q_{ij} \\gamma_j$, i.e. row-wise contraction of
+  $Q$ with the $\\gamma$ vector. Equivalently, with $\\vec{\\gamma}$ a column
+  vector, $\\vec{\\gamma}' = Q \\vec{\\gamma}$, and the Majorana covariance
+  transforms as $\\Gamma \\mapsto Q \\Gamma Q^T$. This is the convention used
+  in Zhao-Rubin-Miyake (2021) and the SCOPE.md declaration of the matchgate-
+  shadow-diagnostic companion paper.
 - Sampled rotations cover the **full** $O(2n)$, i.e. both connected
   components ($\\det = +1$ and $\\det = -1$). Restricting to the connected
   component $SO(2n)$ would force a parity choice that the matchgate-shadow
@@ -213,13 +213,13 @@ def apply_matchgate_rotation_to_majorana_product(
     """Apply a matchgate rotation $Q$ to a Majorana product.
 
     The rotation acts as
-    $\\gamma_i \\mapsto \\sum_j Q_{ji} \\gamma_j$
-    (contragredient convention), so the rotated product is
+    $\\gamma_i \\mapsto \\sum_j Q_{ij} \\gamma_j$
+    (Heisenberg / row convention), so the rotated product is
 
     .. math::
         Q[\\gamma_{i_1} \\cdots \\gamma_{i_{2k}}]
         = \\sum_{j_1, \\ldots, j_{2k}}
-          Q_{j_1, i_1} \\cdots Q_{j_{2k}, i_{2k}}
+          Q_{i_1, j_1} \\cdots Q_{i_{2k}, j_{2k}}
           \\gamma_{j_1} \\cdots \\gamma_{j_{2k}}.
 
     Each unordered Majorana product on the right-hand side is then
@@ -275,16 +275,16 @@ def apply_matchgate_rotation_to_majorana_product(
     # sorted tuples.
     result: MajoranaDecomposition = {(): 1.0 + 0j}
     for i in majorana_indices:
-        column = Q[:, i]  # Q_{j, i} for j in range(dim)
+        row = Q[i, :]  # Q_{i, j} for j in range(dim)
         new_result: MajoranaDecomposition = {}
         for prev_indices, prev_coeff in result.items():
             for j in range(dim):
-                qji = column[j]
-                if qji == 0:
+                qij = row[j]
+                if qij == 0:
                     continue
                 merged = [*prev_indices, j]
                 sign, canon = _canonicalize_majorana_product(merged)
-                contribution = prev_coeff * complex(qji) * sign
+                contribution = prev_coeff * complex(qij) * sign
                 if canon in new_result:
                     new_result[canon] += contribution
                 else:
