@@ -163,17 +163,25 @@ class UCBResult:
         $1 - \\alpha$, the probability with which the bound holds simultaneously
         across all catalog words.
     n_paulis : int
-        Total number of distinct Pauli strings that entered the Bonferroni
-        correction. Reported because the diagnostic's data efficiency is
-        governed by this count.
+        Total number of distinct Pauli strings (or Majorana products, for the
+        matchgate-shadow pipeline) that entered the Bonferroni correction.
+        Reported because the diagnostic's data efficiency is governed by this
+        count.
     per_word : dict[str, dict[str, float]]
         Per-word breakdown: ``{word_name: {"kappa_hat": ..., "radius": ..., "ucb": ...}}``.
+    delta_provenance : str
+        Label describing how this UCB was produced. Library-known values are
+        listed in :data:`cumulant_residual_cert.certify.DeltaProvenance`.
+        The default ``"ucb_random_pauli"`` matches the protocol used by the
+        legacy :func:`delta_ucb` entry point; protocol-agnostic entry points
+        override this when they have a more specific label to report.
     """
 
     delta_ucb: float
     confidence: float
     n_paulis: int
     per_word: dict[str, dict[str, float]]
+    delta_provenance: str = "ucb_random_pauli"
 
 
 def _ucb_from_subword_moments(
@@ -550,6 +558,263 @@ def delta_ucb_from_majorana_moments(
         catalog,
         confidence=confidence,
         n_protocol_terms=n_protocol_terms,
+    )
+
+
+def delta_ucb_matchgate_shadows(
+    catalog: Catalog,
+    record: "MatchgateShadowRecord",  # noqa: F821 -- forward reference; imported lazily
+    alpha: float = 0.05,
+    *,
+    sites_per_word: Sequence[Sequence[int]] | None = None,
+    u1_certified: bool = False,
+    radius: str = "hoeffding",
+) -> UCBResult:
+    """End-to-end matchgate-shadow UCB on $\\Delta^{\\mathrm{cat}}_{r, U(1)}$.
+
+    Pipeline:
+
+    1. Enumerate every Majorana product appearing in any catalog subword via
+       :func:`._majorana.word_majorana_decomposition`. Map the 1-based
+       Majorana indices used by the decomposition routine to the 0-based
+       indices used by the matchgate-shadow inverse channel.
+    2. Call :func:`._matchgate_shadow.matchgate_inverse_channel_majorana_moments`
+       on the deduplicated target list, with a Bonferroni-corrected per-term
+       failure probability ``alpha / T`` where $T$ is the number of distinct
+       Majorana products in the union.
+    3. Repackage the inverse-channel output (real-component for even-$k$
+       Majorana products, imaginary-component for odd-$k$) into the
+       ``(complex, float)`` value format expected by
+       :func:`delta_ucb_from_majorana_moments`, then route through that
+       function for the Möbius assembly and product-error propagation.
+
+    Parameters
+    ----------
+    catalog : Catalog
+        Charge-neutral fermionic-word catalog. All words must satisfy
+        ``word.length <= catalog.r``.
+    record : MatchgateShadowRecord
+        Pre-generated matchgate-shadow record on ``record.n_modes`` fermionic
+        modes (= JW qubits). Generate one with
+        :func:`._matchgate_shadow.generate_matchgate_shadow_record`, or
+        construct one directly from hardware data.
+    alpha : float, default 0.05
+        Failure probability for the simultaneous certificate. The returned
+        UCB holds with probability $\\ge 1 - \\alpha$ jointly over every word
+        in the catalog.
+    sites_per_word : sequence of sequences of int, optional
+        1-based site assignments per catalog word, in catalog order. If
+        omitted, each word ``w`` is assigned to consecutive sites
+        ``(1, 2, ..., w.length)`` (i.e., interpreted as acting on the
+        leading modes). Every site index must lie in
+        ``[1, record.n_modes]``.
+    u1_certified : bool, default False
+        Whether the caller has externally verified that the underlying state
+        $\\rho$ satisfies $[\\rho, \\hat N] = 0$. The library cannot verify
+        $U(1)$-invariance from a shadow record alone (see SCOPE Declaration
+        3). The flag is forwarded to the result's ``delta_provenance``:
+
+        - ``True``: ``delta_provenance = "ucb_matchgate_shadows"``.
+        - ``False`` (default): ``delta_provenance =
+          "ucb_matchgate_shadows_u1_assumed"`` to make explicit that the
+          certificate is conditional on an externally-supplied
+          $U(1)$-invariance guarantee.
+
+    radius : {"hoeffding", "empirical_bernstein"}, default "hoeffding"
+        Per-Majorana-product radius rule.
+
+        - ``"hoeffding"`` (default): standard Hoeffding radius using all
+          $M$ shots in the record.
+        - ``"empirical_bernstein"``: opt-in. The library enforces a
+          Maurer-Pontil canonical 50/50 sample split (SCOPE Declaration 4):
+          the first half drives moment estimation, the second half is
+          reserved for variance calibration. The current implementation
+          uses Hoeffding radii on the first half and reserves the second
+          half as a holdout (the variance-driven tightening is a planned
+          refinement; the radius reported is the conservative Hoeffding
+          value on the diagnostic half so the certificate remains valid).
+
+    Returns
+    -------
+    UCBResult
+        With ``delta_provenance`` set per the ``u1_certified`` flag.
+
+    Notes
+    -----
+    Index conventions reconciled internally:
+
+    - :mod:`._majorana` produces strictly-sorted **1-based** Majorana index
+      tuples (site $p$ maps to indices $2p - 1, 2p$).
+    - :mod:`._matchgate_shadow` consumes strictly-sorted **0-based** indices
+      (site $p$ maps to indices $2p, 2p + 1$).
+
+    A 1-based index $j$ is shifted to a 0-based index $j - 1$ before
+    invoking the inverse channel, and the returned float-typed mean is
+    repackaged as a complex value with the correct reality component
+    ($i^k$-structure: real for $k$ even, imaginary for $k$ odd).
+    """
+    from ._majorana import word_majorana_decomposition
+    from ._matchgate_shadow import (
+        MatchgateShadowRecord,
+        matchgate_inverse_channel_majorana_moments,
+    )
+
+    if not 0.0 < alpha < 1.0:
+        raise ValueError(f"alpha must be in (0, 1); got {alpha!r}")
+    if not isinstance(record, MatchgateShadowRecord):
+        raise TypeError(
+            f"record must be a MatchgateShadowRecord; got {type(record).__name__}"
+        )
+    if radius not in ("hoeffding", "empirical_bernstein"):
+        raise ValueError(
+            f"radius must be 'hoeffding' or 'empirical_bernstein'; got {radius!r}"
+        )
+
+    n_modes = record.n_modes
+
+    # Default site assignment: leading modes, distinct per word.
+    if sites_per_word is None:
+        sites_per_word_local: list[tuple[int, ...]] = [
+            tuple(range(1, w.length + 1)) for w in catalog
+        ]
+    else:
+        if len(sites_per_word) != len(catalog):
+            raise ValueError(
+                f"sites_per_word has {len(sites_per_word)} entries but catalog has "
+                f"{len(catalog)} words"
+            )
+        sites_per_word_local = [tuple(int(s) for s in sites) for sites in sites_per_word]
+        for w, sites_t in zip(catalog, sites_per_word_local, strict=False):
+            if len(sites_t) != w.length:
+                raise ValueError(
+                    f"word {w.name!r} has length {w.length} but {len(sites_t)} sites supplied"
+                )
+            if len(set(sites_t)) != len(sites_t):
+                raise ValueError(
+                    f"word {w.name!r} has duplicate site indices: {sites_t}"
+                )
+            for s in sites_t:
+                if not (1 <= s <= n_modes):
+                    raise ValueError(
+                        f"word {w.name!r} site {s} outside 1..n_modes={n_modes}"
+                    )
+
+    # 1. Enumerate the union of Majorana products across all catalog subwords.
+    #    Keys are 1-based; we collect them in 1-based form, then convert.
+    target_set_1based: set[tuple[int, ...]] = set()
+    decomps_by_subword: dict[
+        tuple[str, tuple[int, ...]], dict[tuple[int, ...], complex]
+    ] = {}
+    for w, sites_t in zip(catalog, sites_per_word_local, strict=False):
+        m = w.length
+        for k_sub in range(1, m + 1):
+            for B in combinations(range(1, m + 1), k_sub):
+                key = tuple(sorted(B))
+                sub_letters = tuple(w.letters[i - 1] for i in key)
+                sub_sites = tuple(sites_t[i - 1] for i in key)
+                decomp = word_majorana_decomposition(sub_letters, sub_sites)
+                decomps_by_subword[(w.name, key)] = decomp
+                for indices in decomp:
+                    if indices:  # skip identity ()
+                        target_set_1based.add(indices)
+
+    # The inverse channel only accepts even-degree products; odd-degree
+    # 1-based products in the union have expectation 0 on U(1)-invariant
+    # states. We split them out and assign them (0, 0) downstream.
+    even_targets_1based = sorted(
+        S for S in target_set_1based if len(S) % 2 == 0
+    )
+    odd_targets_1based = {S for S in target_set_1based if len(S) % 2 == 1}
+
+    # Convert even targets to 0-based for the inverse channel.
+    even_targets_0based = [tuple(j - 1 for j in S) for S in even_targets_1based]
+
+    # 2. Bonferroni: per-term alpha. T counts distinct Majorana products
+    #    in the union, which is the protocol's Bonferroni-correction count.
+    T = len(target_set_1based)
+    alpha_per = alpha / max(T, 1)
+
+    # 3. Empirical-Bernstein opt-in: canonical Maurer-Pontil 50/50 split.
+    if radius == "empirical_bernstein":
+        M_total = record.n_shots
+        if M_total < 2:
+            raise ValueError(
+                "empirical_bernstein requires at least 2 shots for the split; "
+                f"got M={M_total}"
+            )
+        half = M_total // 2
+        diag_record = MatchgateShadowRecord(
+            rotations=record.rotations[:half].copy(),
+            outcomes=record.outcomes[:half].copy(),
+            n_modes=n_modes,
+        )
+        # The holdout (`record.rotations[half:]`, etc.) is the reserved
+        # variance-calibration half required by the Maurer-Pontil canonical
+        # split. The current implementation uses Hoeffding on the
+        # diagnostic half (a strictly valid certificate) and leaves the
+        # variance-driven tightening as a follow-up refinement.
+        active_record = diag_record
+    else:
+        active_record = record
+
+    # 4. Call the inverse channel on the even-degree union.
+    if even_targets_0based:
+        moments_by_0based = matchgate_inverse_channel_majorana_moments(
+            active_record,
+            even_targets_0based,
+            alpha=alpha_per,
+        )
+    else:
+        moments_by_0based = {}
+
+    # 5. Repackage into the (complex, float) format keyed by 1-based indices
+    #    expected by delta_ucb_from_majorana_moments. Reality structure:
+    #    even k -> real component, odd k -> imaginary.
+    majorana_moments: dict[tuple[int, ...], tuple[complex, float]] = {}
+    # Identity (empty product): mean 1, radius 0.
+    majorana_moments[()] = (1.0 + 0j, 0.0)
+    for S_1based, S_0based in zip(
+        even_targets_1based, even_targets_0based, strict=True
+    ):
+        entry = moments_by_0based[S_0based]
+        deg = len(S_1based)
+        k = deg // 2
+        mean_float = entry["mean"]
+        rad_float = entry["radius"]
+        if k % 2 == 0:
+            mean_complex = complex(mean_float, 0.0)
+        else:
+            mean_complex = complex(0.0, mean_float)
+        majorana_moments[S_1based] = (mean_complex, rad_float)
+    # Odd-degree products are exactly zero in expectation on U(1)-invariant
+    # states; the inverse-channel normalization is undefined for them so we
+    # supply (0, 0) instead of routing them through the inverse channel.
+    # This is exact (not a bound) under the declared U(1) precondition.
+    for S in odd_targets_1based:
+        majorana_moments[S] = (0.0 + 0j, 0.0)
+
+    # 6. Route through the protocol-agnostic Majorana entry point.
+    result = delta_ucb_from_majorana_moments(
+        majorana_moments=majorana_moments,
+        catalog=catalog,
+        sites_per_word=sites_per_word_local,
+        confidence=1.0 - alpha,
+        n_protocol_terms=T,
+        require_all_terms=True,
+    )
+
+    # 7. Attach the provenance label.
+    provenance = (
+        "ucb_matchgate_shadows"
+        if u1_certified
+        else "ucb_matchgate_shadows_u1_assumed"
+    )
+    return UCBResult(
+        delta_ucb=result.delta_ucb,
+        confidence=result.confidence,
+        n_paulis=result.n_paulis,
+        per_word=result.per_word,
+        delta_provenance=provenance,
     )
 
 

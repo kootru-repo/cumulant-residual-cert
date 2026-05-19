@@ -10,14 +10,16 @@ Currently shipped:
   and :func:`catalog_to_fermion_operators`, so catalog words can be fed to
   OpenFermion's measurement-grouping or shadow-protocol utilities.
 
-- :func:`delta_ucb_from_matchgate_shadows`: thin wrapper that accepts
-  user-supplied per-Majorana-product ``(mean, radius)`` estimates from a
-  matchgate / fermionic-Gaussian shadow protocol and routes them through
-  :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`. The
+- :func:`delta_ucb_from_matchgate_shadows`: dispatch wrapper that accepts
+  either a :class:`~cumulant_residual_cert._matchgate_shadow.MatchgateShadowRecord`
+  (end-to-end pipeline, routes to
+  :func:`~cumulant_residual_cert.delta_ucb_matchgate_shadows`) or a
+  pre-computed per-Majorana-product ``(mean, radius)`` dictionary (routes to
+  :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`). The
   matchgate route avoids the random-Pauli $3^{|P|}$ Jordan-Wigner range
-  penalty. A built-in matchgate-snapshot estimator (Pfaffian +
-  orthogonal-matrix algebra) is planned for a later release; the current
-  wrapper expects the caller to perform the snapshot estimation.
+  penalty. The built-in matchgate-snapshot estimator (Pfaffian +
+  orthogonal-matrix algebra) is now supplied by the
+  ``_matchgate_shadow`` module.
 
 Install with::
 
@@ -27,12 +29,14 @@ Install with::
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union
 
 from ..catalog import Catalog, FermionicWord
 
 if TYPE_CHECKING:
     from openfermion import FermionOperator
+
+    from .._matchgate_shadow import MatchgateShadowRecord
 
 _OPENFERMION_MISSING_MSG = (
     "OpenFermion is required for cumulant_residual_cert.adapters.openfermion. "
@@ -118,56 +122,72 @@ def catalog_to_fermion_operators(
 
 
 def delta_ucb_from_matchgate_shadows(
-    majorana_moments: dict[tuple[int, ...], tuple[complex, float]],
+    moments_or_record: Union[
+        dict[tuple[int, ...], tuple[complex, float]], "MatchgateShadowRecord"
+    ],
     catalog: Catalog,
-    sites_per_word: Sequence[Sequence[int]],
+    sites_per_word: Sequence[Sequence[int]] | None = None,
     *,
     confidence: float = 0.95,
-    n_protocol_terms: int,
+    n_protocol_terms: int | None = None,
     require_all_terms: bool = True,
+    u1_certified: bool = False,
+    radius: str = "hoeffding",
 ) -> Any:
     """UCB diagnostic on matchgate / fermionic-Gaussian shadow output.
 
-    Thin wrapper that routes user-supplied per-Majorana-product
-    ``(mean, radius)`` estimates through
-    :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`.
+    Two input modes are supported:
+
+    1. **Shadow-record path (recommended):** pass a
+       :class:`~cumulant_residual_cert._matchgate_shadow.MatchgateShadowRecord`
+       as ``moments_or_record``. The library handles the entire
+       inverse-channel + Bonferroni + Möbius assembly pipeline via
+       :func:`~cumulant_residual_cert.delta_ucb_matchgate_shadows`. This is
+       the supported end-to-end matchgate-shadow workflow.
+
+    2. **Pre-computed Majorana-moments path:** pass a dictionary
+       ``{majorana_indices: (mean, radius)}`` keyed by 1-based Majorana
+       index tuples; the wrapper routes to
+       :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`.
+       Use this if you ran the inverse channel separately (or used a
+       different snapshot estimator) and already have moment estimates.
+
     Matchgate-shadow protocols (e.g.
-    :doi:`Wan-Hadfield-Cleve-Babbush 2022 <10.1103/PRXQuantum.4.030337>`,
-    :doi:`Zhao-Rubin-Miyake-Babbush 2021 <10.1103/PhysRevLett.127.110504>`)
+    :doi:`Zhao-Rubin-Miyake-Babbush 2021 <10.1103/PhysRevLett.127.110504>`,
+    :doi:`Wan-Hadfield-Cleve-Babbush 2022 <10.1103/PRXQuantum.4.030337>`)
     produce a single-shot estimator
     $\\hat{\\langle \\gamma_S \\rangle}_t$ for every degree-$|S|$ Majorana
     product, with a range factor that scales polynomially in the qubit
     count instead of the random-Pauli $3^{|P|}$ Jordan-Wigner penalty.
 
-    Caller responsibility: take the matchgate-shadow record, compute the
-    empirical mean and Hoeffding-style radius for every Majorana product
-    that appears in the catalog's letter-to-Majorana decomposition, and
-    pass them in via ``majorana_moments``. The Bonferroni correction on
-    the radii is also the caller's responsibility.
-
-    A built-in snapshot estimator (with the Pfaffian + matchgate-orthogonal
-    matrix algebra) is planned for a future release; until then, this
-    wrapper exists to make the moment-to-UCB pipeline immediately usable
-    by anyone who already has matchgate-shadow output.
-
     Parameters
     ----------
-    majorana_moments : dict[tuple[int, ...], (complex, float)]
-        See :func:`~cumulant_residual_cert.delta_ucb_from_majorana_moments`
-        for the convention.
+    moments_or_record : MatchgateShadowRecord or dict
+        Either a shadow record (route 1) or a pre-computed Majorana-moments
+        dictionary (route 2). See module-level docs.
     catalog : Catalog
-    sites_per_word : sequence of sequences of int
+    sites_per_word : sequence of sequences of int, optional
+        1-based site assignments per catalog word. Required for the
+        pre-computed-moments path; optional for the shadow-record path
+        (defaults to ``(1, 2, ..., w.length)`` per word).
     confidence : float, default 0.95
-    n_protocol_terms : int
+        Target confidence $1 - \\alpha$ of the simultaneous bound.
+    n_protocol_terms : int, optional
         Number of distinct Majorana products in the Bonferroni union.
+        Required for the pre-computed-moments path; ignored on the
+        shadow-record path (counted automatically).
     require_all_terms : bool, default True
-        If True (default), raise on any missing Majorana product entry
-        that appears in a catalog subword decomposition. This is the safe
-        default for a certification API. If False, missing entries are
-        treated as $(0, 0)$; this is exact for odd-degree products on
-        $U(1)$-invariant states but unsafe for missing even-degree
-        entries. Opt in to ``False`` only after verifying that all
-        missing terms are odd-degree.
+        Pre-computed-moments path only. If True (default), raise on any
+        missing Majorana product entry that appears in a catalog subword
+        decomposition. If False, missing entries are treated as $(0, 0)$;
+        this is exact for odd-degree products on $U(1)$-invariant states
+        but unsafe for missing even-degree entries.
+    u1_certified : bool, default False
+        Shadow-record path only. Controls the result's
+        ``delta_provenance`` (see
+        :func:`~cumulant_residual_cert.delta_ucb_matchgate_shadows`).
+    radius : {"hoeffding", "empirical_bernstein"}, default "hoeffding"
+        Shadow-record path only. Selects the per-term radius rule.
 
     Returns
     -------
@@ -176,10 +196,33 @@ def delta_ucb_from_matchgate_shadows(
     # No actual OpenFermion call is made here yet; the wrapper is pure
     # routing. The optional-dependency import is kept lazy so docs builds
     # work without OpenFermion installed.
-    from ..diagnostic import delta_ucb_from_majorana_moments
+    from .._matchgate_shadow import MatchgateShadowRecord
+    from ..diagnostic import (
+        delta_ucb_from_majorana_moments,
+        delta_ucb_matchgate_shadows,
+    )
 
+    if isinstance(moments_or_record, MatchgateShadowRecord):
+        alpha = 1.0 - confidence
+        return delta_ucb_matchgate_shadows(
+            catalog=catalog,
+            record=moments_or_record,
+            alpha=alpha,
+            sites_per_word=sites_per_word,
+            u1_certified=u1_certified,
+            radius=radius,
+        )
+
+    if sites_per_word is None:
+        raise ValueError(
+            "sites_per_word is required on the pre-computed Majorana-moments path"
+        )
+    if n_protocol_terms is None:
+        raise ValueError(
+            "n_protocol_terms is required on the pre-computed Majorana-moments path"
+        )
     return delta_ucb_from_majorana_moments(
-        majorana_moments=majorana_moments,
+        majorana_moments=moments_or_record,
         catalog=catalog,
         sites_per_word=sites_per_word,
         confidence=confidence,
